@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>SCLB 七层网关 · 自定义插件</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsoft yahei","sans-serif"; background: #f2f6f9; font-size: 14px; color: #000000d9; }
+
+/* ===== 顶栏 ===== */
+.top-nav { height: 48px; background: #001529; display: flex; align-items: center; padding: 0 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 200; }
+.top-logo { display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid rgba(255,255,255,0.12); margin-right: 4px; flex-shrink: 0; }
+.top-logo svg { display: block; }
+.top-logo-text { font-size: 16px; font-weight: 600; color: #fff; }
+.top-nav-items { display: flex; align-items: center; flex: 1; overflow: hidden; }
+.top-nav-item { padding: 0 12px; height: 48px; display: flex; align-items: center; color: rgba(255,255,255,0.75); cursor: pointer; font-size: 13px; white-space: nowrap; border-bottom: 2px solid transparent; }
+.top-nav-item:hover { color: #fff; }
+.top-nav-item.active { color: #fff; border-bottom-color: #1890ff; background: rgba(255,255,255,0.06); }
+.top-nav-right { display: flex; align-items: center; gap: 2px; flex-shrink: 0; margin-left: 8px; }
+.top-search { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.45); padding: 4px 12px; font-size: 12px; cursor: pointer; margin-right: 8px; width: 200px; }
+.top-nav-tool { padding: 0 8px; height: 48px; display: flex; align-items: center; color: rgba(255,255,255,0.75); font-size: 12px; cursor: pointer; white-space: nowrap; }
+.top-nav-tool:hover { color: #fff; }
+.top-nav-avatar { width: 28px; height: 28px; background: #1890ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #fff; margin-left: 6px; cursor: pointer; }
+
+/* ===== 布局 ===== */
+.layout { display: flex; margin-top: 48px; height: calc(100vh - 48px); }
+
+/* ===== 侧边栏 ===== */
+.sider { width: 168px; background: #001529; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.sider-title { display: block; line-height: 48px; padding: 0 16px; font-size: 14px; font-weight: 500; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.12); flex-shrink: 0; }
+.sider-menu { flex: 1; padding: 4px 0; }
+.menu-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; color: rgba(255,255,255,0.65); font-size: 13px; cursor: pointer; transition: background 0.15s; user-select: none; }
+.menu-item:hover { color: #fff; background: rgba(255,255,255,0.06); }
+.menu-item.active { color: #fff; background: #1890ff; }
+.menu-icon { font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
+.menu-arrow { margin-left: auto; font-size: 12px; color: rgba(255,255,255,0.45); transition: transform 0.2s; display: inline-block; }
+.menu-arrow.open { transform: rotate(90deg); }
+.menu-sub-group { background: rgba(0,0,0,0.18); }
+.menu-sub-item { padding-left: 36px; }
+.sider-collapse-btn { height: 40px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.45); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.08); font-size: 16px; flex-shrink: 0; }
+.sider-collapse-btn:hover { color: #fff; }
+
+/* ===== 主内容 ===== */
+.main-content { flex: 1; overflow-y: auto; background: #f2f6f9; display: flex; flex-direction: column; }
+.page { display: none; flex: 1; flex-direction: column; }
+.page.active { display: flex; }
+
+/* ===== 页头 ===== */
+.page-header { background: #fff; padding: 12px 16px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; }
+.page-title { font-size: 16px; font-weight: 500; }
+
+/* ===== 内容白卡 ===== */
+.content-card { margin: 16px; background: #fff; padding: 16px; }
+
+/* ===== 工具栏 ===== */
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.toolbar-left { display: flex; gap: 8px; }
+.toolbar-right { display: flex; gap: 8px; }
+
+/* ===== 按钮 ===== */
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 15px; border: 1px solid #d9d9d9; background: #fff; color: #000000d9; font-size: 14px; cursor: pointer; border-radius: 2px; line-height: 22px; font-family: inherit; transition: all 0.2s; white-space: nowrap; }
+.btn:hover { border-color: #1890ff; color: #1890ff; }
+.btn-primary { background: #1890ff; border-color: #1890ff; color: #fff; }
+.btn-primary:hover { background: #40a9ff; border-color: #40a9ff; color: #fff; }
+.btn-danger { background: #ff4d4f; border-color: #ff4d4f; color: #fff; }
+.btn-danger:hover { background: #ff7875; border-color: #ff7875; }
+
+/* ===== 搜索框 ===== */
+.search-box { display: flex; align-items: center; border: 1px solid #d9d9d9; background: #fff; height: 32px; }
+.search-box input { border: none; outline: none; padding: 0 10px; font-size: 14px; width: 200px; height: 100%; font-family: inherit; }
+.search-box .s-btn { width: 32px; height: 100%; background: none; border: none; border-left: 1px solid #d9d9d9; cursor: pointer; color: #8c8c8c; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.search-box .s-btn:hover { color: #1890ff; }
+
+/* ===== 表格 ===== */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { padding: 12px 16px; text-align: left; font-weight: 500; font-size: 14px; background: #fafafa; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+.data-table td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+.data-table tbody tr:hover td { background: #fafafa; }
+.link { color: #1890ff; cursor: pointer; background: none; border: none; font-size: 14px; padding: 0; font-family: inherit; }
+.link:hover { color: #40a9ff; }
+
+/* 操作 */
+.ops { display: flex; gap: 12px; }
+.op { color: #1890ff; cursor: pointer; font-size: 14px; white-space: nowrap; }
+.op:hover { color: #40a9ff; }
+.op.danger { color: #ff4d4f; }
+.op.danger:hover { color: #ff7875; }
+.op.gray { color: #8c8c8c; cursor: default; }
+
+/* 状态 */
+.tag-on   { display: inline-block; padding: 1px 8px; font-size: 12px; border: 1px solid #52c41a; color: #52c41a; background: #f6ffed; border-radius: 2px; }
+.tag-off  { display: inline-block; padding: 1px 8px; font-size: 12px; border: 1px solid #d9d9d9; color: #8c8c8c; background: #fafafa; border-radius: 2px; }
+.tag-draft{ display: inline-block; padding: 1px 8px; font-size: 12px; border: 1px solid #faad14; color: #d48806; background: #fffbe6; border-radius: 2px; }
+.tag-blue { display: inline-block; padding: 1px 8px; font-size: 12px; border: 1px solid #91d5ff; color: #1890ff; background: #e6f7ff; border-radius: 2px; }
+.plugin-tag { display: inline-block; background: #f5f5f5; border: 1px solid #e8e8e8; border-radius: 2px; padding: 1px 6px; font-family: "Consolas","Monaco",monospace; font-size: 12px; color: #595959; margin: 2px 4px 2px 0; }
+
+/* 分页 */
+.pagination { display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin-top: 16px; font-size: 14px; }
+.pg-total { color: #000000d9; margin-right: 4px; }
+.pg-btn { min-width: 28px; height: 28px; padding: 0 6px; border: 1px solid #d9d9d9; background: #fff; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; border-radius: 2px; font-family: inherit; }
+.pg-btn:hover { border-color: #1890ff; color: #1890ff; }
+.pg-btn.active { border-color: #1890ff; color: #1890ff; background: #e6f4ff; }
+.pg-btn:disabled { color: #bbb; cursor: default; }
+.pg-size { border: 1px solid #d9d9d9; background: #fff; font-size: 14px; padding: 2px 6px; cursor: pointer; margin-left: 8px; border-radius: 2px; }
+.pg-goto { display: flex; align-items: center; gap: 6px; margin-left: 8px; }
+.pg-goto input { width: 48px; border: 1px solid #d9d9d9; padding: 2px 6px; font-size: 14px; text-align: center; outline: none; border-radius: 2px; }
+
+/* ===== 表单页 ===== */
+.form-page { flex: 1; overflow-y: auto; background: #f2f6f9; }
+.form-wrap { margin: 16px; background: #fff; }
+.f-section-title { font-size: 15px; font-weight: 500; padding: 20px 24px 16px; border-bottom: 1px solid #f0f0f0; }
+.f-section-body { padding: 24px 24px 8px; }
+.f-row { display: flex; align-items: flex-start; margin-bottom: 20px; }
+.f-row:last-child { margin-bottom: 0; }
+.f-label { width: 90px; flex-shrink: 0; text-align: right; padding-right: 12px; line-height: 32px; color: #000000d9; white-space: nowrap; }
+.req { color: #ff4d4f; margin-right: 2px; }
+.f-ctrl { flex: 1; }
+.f-hint { margin-top: 4px; color: #8c8c8c; font-size: 12px; }
+
+.f-input { width: 100%; height: 32px; border: 1px solid #d9d9d9; padding: 0 12px; font-size: 14px; outline: none; font-family: inherit; border-radius: 2px; }
+.f-input:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.15); }
+.f-textarea { width: 100%; min-height: 72px; border: 1px solid #d9d9d9; padding: 6px 12px; font-size: 14px; outline: none; resize: vertical; font-family: inherit; border-radius: 2px; line-height: 1.6; }
+.f-textarea:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.15); }
+.f-select { height: 32px; border: 1px solid #d9d9d9; padding: 0 28px 0 12px; font-size: 14px; outline: none; background: #fff; font-family: inherit; appearance: none; border-radius: 2px; width: 100%; cursor: pointer; }
+.f-select:focus { border-color: #1890ff; }
+.sel-wrap { position: relative; }
+.sel-wrap::after { content:'▾'; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#8c8c8c; pointer-events:none; font-size:12px; }
+
+/* 代码编辑器 */
+.code-editor { border: 1px solid #d9d9d9; border-radius: 2px; overflow: hidden; }
+.code-body { display: flex; font-family: "Consolas","Monaco",monospace; font-size: 13px; line-height: 22px; min-height: 280px; background: #1e1e1e; }
+.code-nums { background: #252525; color: #858585; padding: 10px 10px; text-align: right; user-select: none; min-width: 42px; border-right: 1px solid #3d3d3d; }
+.code-area { flex: 1; padding: 10px 14px; color: #d4d4d4; overflow: auto; white-space: pre; outline: none; }
+.kw{color:#569cd6} .fn{color:#dcdcaa} .str{color:#ce9178} .cm{color:#6a9955} .var{color:#9cdcfe} .num{color:#b5cea8} .type{color:#4ec9b0}
+
+/* 配置参数表 */
+.param-table { width: 100%; border-collapse: collapse; }
+.param-table th { padding: 8px 12px; background: #fafafa; border: 1px solid #f0f0f0; font-weight: 500; font-size: 13px; text-align: left; }
+.param-table td { padding: 8px 12px; border: 1px solid #f0f0f0; font-size: 13px; }
+.param-table .f-input { height: 28px; }
+.param-table .f-select { height: 28px; }
+
+/* 参数行 */
+.param-row { display: grid; grid-template-columns: 1fr 120px 80px 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+.param-del { border: none; background: none; color: #ff4d4f; cursor: pointer; font-size: 18px; line-height: 1; }
+
+/* 表单底部按钮 */
+.f-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 8px; }
+
+/* 分割线 */
+.divider { border: none; border-top: 1px solid #f0f0f0; margin: 8px 0; }
+
+/* ===== 插件选择 Modal ===== */
+.mask { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300; display: none; align-items: center; justify-content: center; }
+.mask.open { display: flex; }
+.modal { background: #fff; width: 640px; max-height: 80vh; display: flex; flex-direction: column; border-radius: 2px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+.modal-hd { padding: 14px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 16px; font-weight: 500; }
+.modal-close { border: none; background: none; font-size: 18px; cursor: pointer; color: #8c8c8c; }
+.modal-close:hover { color: #000; }
+.modal-bd { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.modal-ft { padding: 12px 20px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 8px; }
+
+/* 插件选项列表 */
+.pick-list { border: 1px solid #f0f0f0; border-radius: 2px; }
+.pick-item { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.15s; }
+.pick-item:last-child { border-bottom: none; }
+.pick-item:hover { background: #f0f7ff; }
+.pick-item.sel { background: #e6f4ff; }
+.pick-radio { accent-color: #1890ff; cursor: pointer; width: 15px; height: 15px; flex-shrink: 0; }
+.pick-name { font-weight: 500; color: #1890ff; }
+.pick-desc { font-size: 12px; color: #8c8c8c; margin-top: 2px; }
+.pick-stage { font-size: 12px; color: #8c8c8c; margin-left: auto; white-space: nowrap; }
+
+/* 草稿展开按钮（橙色） */
+.expand-btn { width:18px;height:18px;border:1px solid #fa8c16;background:#fff;border-radius:2px;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;color:#fa8c16;font-family:monospace;position:relative; }
+.expand-btn:hover { border-color:#d46b08;color:#d46b08; }
+.expand-btn::after { content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;font-size:12px;padding:4px 8px;border-radius:2px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:100; }
+.expand-btn:hover::after { opacity:1; }
+.expand-btn::before { content:'';position:absolute;left:50%;bottom:calc(100% + 2px);transform:translateX(-50%);border:4px solid transparent;border-top-color:rgba(0,0,0,0.75);pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:100; }
+.expand-btn:hover::before { opacity:1; }
+/* 草稿子行 */
+.draft-row td { background:#fffbe6;border-bottom:1px solid #ffe58f; }
+.draft-row:last-child td { border-bottom:1px solid #f0f0f0; }
+.bound-card { border: 1px solid #f0f0f0; margin-bottom: 12px; border-radius: 2px; }
+.bound-card-hd { padding: 10px 16px; background: #fafafa; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+.bound-card-bd { padding: 16px; }
+
+/* 确认 modal */
+.confirm-modal { width: 420px; }
+
+/* ===== 详情页 ===== */
+.detail-page { flex: 1; overflow-y: auto; background: #f2f6f9; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.detail-card { background: #fff; border-radius: 2px; }
+.detail-card-hd { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; font-size: 15px; font-weight: 500; }
+.detail-card-bd { padding: 24px; }
+.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 48px; }
+.detail-item { display: flex; flex-direction: column; gap: 6px; }
+.detail-item-label { font-size: 12px; color: #8c8c8c; }
+.detail-item-value { font-size: 14px; color: #000000d9; word-break: break-all; }
+.detail-item.full { grid-column: 1 / -1; }
+
+/* ===== 步骤向导 ===== */
+.wizard-header { background: #fff; padding: 20px 40px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+.wizard-steps { display: flex; align-items: center; width: 100%; max-width: 100%; }
+.step { display: flex; align-items: center; flex-shrink: 0; }
+.step:last-child { flex-shrink: 0; }
+.step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; border: 1px solid #d9d9d9; background: #fff; color: #8c8c8c; }
+.step-circle.done { background: #1890ff; border-color: #1890ff; color: #fff; }
+.step-circle.active { background: #1890ff; border-color: #1890ff; color: #fff; }
+.step-label { margin-left: 8px; font-size: 14px; color: #8c8c8c; white-space: nowrap; }
+.step-label.active { color: #1890ff; font-weight: 500; }
+.step-label.done { color: #000000d9; }
+.step-line { flex: 1; height: 1px; background: #f0f0f0; margin: 0 24px; min-width: 60px; }
+.step-line.done { background: #1890ff; }
+
+.wizard-body { flex: 1; overflow-y: auto; background: #f2f6f9; }
+.wizard-step-content { display: none; }
+.wizard-step-content.active { display: block; }
+.wizard-footer { background: #fff; border-top: 1px solid #f0f0f0; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+
+.text-gray { color: #8c8c8c; }
+.text-sm { font-size: 12px; }
+.mt-4 { margin-top: 4px; }
+.mt-12 { margin-top: 12px; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+</style>
+</head>
+<body>
+
+<!-- 顶栏 -->
+<div class="top-nav">
+  <div class="top-logo">
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="16" fill="#1890ff"/>
+      <path d="M9 22 L16 11 L23 22" stroke="#fff" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+    </svg>
+    <span class="top-logo-text">Panther</span>
+  </div>
+  <div class="top-nav-items">
+    <div class="top-nav-item">🏠 控制台</div>
+    <div class="top-nav-item">⊞ 全部产品</div>
+    <div class="top-nav-item">Flux DevOps</div>
+    <div class="top-nav-item">Redis</div>
+    <div class="top-nav-item active">负载均衡 SCLB</div>
+    <div class="top-nav-item">CMDB</div>
+    <div class="top-nav-item">CVM</div>
+  </div>
+  <div class="top-nav-right">
+    <div class="top-search">🔍 支持输入关键词搜索产品和文档</div>
+    <div class="top-nav-tool">业务账号</div>
+    <div class="top-nav-tool">业务账单</div>
+    <div class="top-nav-tool">工单</div>
+    <div class="top-nav-tool">值班</div>
+    <div class="top-nav-tool">学习中心</div>
+    <div class="top-nav-tool">🔔 通知</div>
+    <div class="top-nav-avatar">王</div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- 侧边栏 -->
+  <div class="sider">
+    <span class="sider-title">负载均衡 SCLB</span>
+    <div class="sider-menu">
+      <div class="menu-item"><span class="menu-icon">⊞</span>概览页</div>
+      <div class="menu-item" onclick="toggleGroup('g4')">
+        <span class="menu-icon">◇</span>四层负载均衡<span class="menu-arrow" id="arr-g4">›</span>
+      </div>
+      <div class="menu-sub-group" id="g4" style="display:none">
+        <div class="menu-item menu-sub-item">实例列表</div>
+        <div class="menu-item menu-sub-item">监听器管理</div>
+      </div>
+      <div class="menu-item" onclick="toggleGroup('g7')">
+        <span class="menu-icon">⊙</span>七层应用网关<span class="menu-arrow open" id="arr-g7">›</span>
+      </div>
+      <div class="menu-sub-group" id="g7">
+        <div class="menu-item menu-sub-item" onclick="nav('page-route','menu-route')">网关实例</div>
+        <div class="menu-item menu-sub-item" onclick="nav('page-route','menu-route')">服务项目</div>
+        <div class="menu-item menu-sub-item active" id="menu-plugin" onclick="nav('page-list','menu-plugin')">自定义插件</div>
+      </div>
+      <div class="menu-item" onclick="toggleGroup('gm')">
+        <span class="menu-icon">◈</span>托管实例<span class="menu-arrow" id="arr-gm">›</span>
+      </div>
+      <div class="menu-sub-group" id="gm" style="display:none">
+        <div class="menu-item menu-sub-item">实例列表</div>
+      </div>
+      <div class="menu-item" onclick="toggleGroup('ga')">
+        <span class="menu-icon">🔔</span>告警策略管理<span class="menu-arrow" id="arr-ga">›</span>
+      </div>
+      <div class="menu-sub-group" id="ga" style="display:none">
+        <div class="menu-item menu-sub-item">告警规则</div>
+      </div>
+      <div class="menu-item" onclick="toggleGroup('gp')">
+        <span class="menu-icon">📋</span>申请管理<span class="menu-arrow" id="arr-gp">›</span>
+      </div>
+      <div class="menu-sub-group" id="gp" style="display:none">
+        <div class="menu-item menu-sub-item">申请列表</div>
+      </div>
+    </div>
+    <div class="sider-collapse-btn">‹</div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- ==================== 插件列表 ==================== -->
+    <div class="page active" id="page-list">
+      <div class="page-header">
+        <div class="page-title">自定义插件</div>
+      </div>
+      <div class="content-card">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <button class="btn btn-primary" onclick="showPage('page-create')">新建插件</button>
+            <button class="btn">刷 新</button>
+          </div>
+          <div class="toolbar-right">
+            <div class="search-box">
+              <input type="text" placeholder="搜索插件名称" />
+              <button class="s-btn">🔍</button>
+            </div>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>插件名称</th>
+              <th>执行阶段</th>
+              <th>状态</th>
+              <th>创建时间</th>
+              <th>描述信息</th>
+              <th>创建人</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- ip-rate-limit：已发布 + 有待发布草稿 -->
+            <tr id="main-ipl">
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <button class="expand-btn" id="exp-ipl" onclick="toggleDraft('ipl')" data-tip="有未发布草稿，点击展开">+</button>
+                  <button class="link" onclick="showPage('page-detail')">ip-rate-limit</button>
+                </div>
+              </td>
+              <td>access</td>
+              <td><span class="tag-on">已发布</span></td>
+              <td>2026/03/15 10:22:33</td>
+              <td>基于客户端 IP 的请求频率限制，超限返回 429</td>
+              <td>王铭浩</td>
+              <td><div class="ops">
+                <span class="op" onclick="showPage('page-detail')">查看</span>
+                <span class="op" onclick="showPage('page-edit')">编辑</span>
+                <span class="op" onclick="showTransfer('ip-rate-limit')">转移</span>
+                <span class="op gray" title="已是最新发布版本">发布</span>
+                <span class="op danger" onclick="showDel('ip-rate-limit')">删除</span>
+              </div></td>
+            </tr>
+            <!-- ip-rate-limit 草稿子行（默认折叠） -->
+            <tr class="draft-row" id="draft-ipl" style="display:none">
+              <td style="padding-left:38px">
+                <span class="tag-draft" style="font-size:11px;margin-right:6px">草稿</span>ip-rate-limit
+              </td>
+              <td>access</td>
+              <td><span class="tag-draft">未发布</span></td>
+              <td>2026/03/18 14:30:00</td>
+              <td>基于客户端 IP 的频率限制，新增支持自定义错误响应体</td>
+              <td>王铭浩</td>
+              <td><div class="ops">
+                <span class="op" onclick="showPage('page-detail')">查看</span>
+                <span class="op" onclick="showPublishConfirm('ipl')">发布</span>
+                <span class="op danger" onclick="deleteDraft('ipl')">删除草稿</span>
+              </div></td>
+            </tr>
+
+            <!-- jwt-auth：已发布，无草稿 -->
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:18px;display:inline-block"></span>
+                  <button class="link" onclick="showPage('page-detail')">jwt-auth</button>
+                </div>
+              </td>
+              <td>access</td>
+              <td><span class="tag-on">已发布</span></td>
+              <td>2026/03/10 14:05:00</td>
+              <td>校验请求头中的 JWT Token，鉴权失败返回 401</td>
+              <td>徐鹏志</td>
+              <td><div class="ops">
+                <span class="op" onclick="showPage('page-detail')">查看</span>
+                <span class="op" onclick="showPage('page-edit')">编辑</span>
+                <span class="op" onclick="showTransfer('jwt-auth')">转移</span>
+                <span class="op gray" title="已是最新发布版本">发布</span>
+                <span class="op danger" onclick="showDel('jwt-auth')">删除</span>
+              </div></td>
+            </tr>
+
+            <!-- request-rewrite：已发布，无草稿 -->
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:18px;display:inline-block"></span>
+                  <button class="link">request-rewrite</button>
+                </div>
+              </td>
+              <td>rewrite</td>
+              <td><span class="tag-on">已发布</span></td>
+              <td>2026/03/08 09:30:00</td>
+              <td>改写请求 URI 并在转发前统一注入业务标识请求头</td>
+              <td>黄华帅</td>
+              <td><div class="ops">
+                <span class="op">查看</span>
+                <span class="op" onclick="showPage('page-edit')">编辑</span>
+                <span class="op" onclick="showTransfer('request-rewrite')">转移</span>
+                <span class="op gray" title="已是最新发布版本">发布</span>
+                <span class="op danger" onclick="showDel('request-rewrite')">删除</span>
+              </div></td>
+            </tr>
+
+            <!-- response-cache：全新未发布插件 -->
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:18px;display:inline-block"></span>
+                  <button class="link">response-cache</button>
+                </div>
+              </td>
+              <td>header_filter</td>
+              <td><span class="tag-draft">未发布</span></td>
+              <td>2026/03/01 16:48:00</td>
+              <td>对 GET 接口的响应结果进行本地缓存，降低上游压力</td>
+              <td>黄华帅</td>
+              <td><div class="ops">
+                <span class="op">查看</span>
+                <span class="op" onclick="showPage('page-edit')">编辑</span>
+                <span class="op gray" title="未发布插件不可转移">转移</span>
+                <span class="op">发布</span>
+                <span class="op danger" onclick="showDel('response-cache')">删除</span>
+              </div></td>
+            </tr>
+
+            <!-- ip-blacklist：已发布，无草稿 -->
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:18px;display:inline-block"></span>
+                  <button class="link">ip-blacklist</button>
+                </div>
+              </td>
+              <td>access</td>
+              <td><span class="tag-on">已发布</span></td>
+              <td>2026/02/20 11:00:00</td>
+              <td>拦截黑名单 IP 发来的请求，命中后直接返回 403</td>
+              <td>何伟军</td>
+              <td><div class="ops">
+                <span class="op">查看</span>
+                <span class="op" onclick="showPage('page-edit')">编辑</span>
+                <span class="op" onclick="showTransfer('ip-blacklist')">转移</span>
+                <span class="op gray" title="已是最新发布版本">发布</span>
+                <span class="op danger" onclick="showDel('ip-blacklist')">删除</span>
+              </div></td>
+            </tr>
+
+            <!-- cors-handler：已发布，无草稿 -->
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:18px;display:inline-block"></span>
+                  <button class="link">cors-handler</button>
+                </div>
+              </td>
+              <td>header_filter</td>
+              <td><span class="tag-on">已发布</span></td>
+              <td>2026/02/14 09:00:00</td>
+              <td>统一处理跨域预检请求，并向响应注入 CORS 头</td>
+              <td>王铭浩</td>
+              <td><div class="ops">
+                <span class="op">查看</span>
+                <span class="op" onclick="showPage('page-edit')">编辑</span>
+                <span class="op" onclick="showTransfer('cors-handler')">转移</span>
+                <span class="op gray" title="已是最新发布版本">发布</span>
+                <span class="op danger" onclick="showDel('cors-handler')">删除</span>
+              </div></td>
+            </tr>
+
+            <!-- access-logger：全新未发布插件 -->
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="width:18px;display:inline-block"></span>
+                  <button class="link">access-logger</button>
+                </div>
+              </td>
+              <td>log</td>
+              <td><span class="tag-draft">未发布</span></td>
+              <td>2026/02/05 15:30:00</td>
+              <td>将请求明细异步投递至 Kafka，用于访问审计与监控上报</td>
+              <td>何伟军</td>
+              <td><div class="ops">
+                <span class="op">查看</span>
+                <span class="op" onclick="showPage('page-edit')">编辑</span>
+                <span class="op gray" title="未发布插件不可转移">转移</span>
+                <span class="op">发布</span>
+                <span class="op danger" onclick="showDel('access-logger')">删除</span>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination">
+          <span class="pg-total">总数: 7</span>
+          <button class="pg-btn" disabled>‹</button>
+          <button class="pg-btn active">1</button>
+          <button class="pg-btn">›</button>
+          <select class="pg-size"><option>10 条/页</option><option>20 条/页</option></select>
+          <div class="pg-goto">跳至 <input type="number" min="1" /> 页</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 新建插件 ==================== -->
+    <div class="page" id="page-create">
+      <div class="page-header">
+        <div class="page-title">新建插件</div>
+        <button class="btn" onclick="showPage('page-list')">返回列表</button>
+      </div>
+      <div class="form-page">
+        <div class="form-wrap">
+          <div class="f-section-title">基础信息</div>
+          <div class="f-section-body">
+            <div class="f-row">
+              <div class="f-label"><span class="req">*</span>插件名称：</div>
+              <div class="f-ctrl">
+                <input class="f-input" placeholder="请输入插件名称" style="max-width:480px" />
+              </div>
+            </div>
+            <div class="f-row">
+              <div class="f-label">描述信息：</div>
+              <div class="f-ctrl">
+                <textarea class="f-textarea" rows="2" placeholder="请输入描述信息" style="max-width:480px"></textarea>
+              </div>
+            </div>
+            <div class="f-row">
+              <div class="f-label"><span class="req">*</span>执行阶段：</div>
+              <div class="f-ctrl">
+                <div class="sel-wrap" style="width:380px">
+                  <select class="f-select">
+                    <option>access — 鉴权、限流、IP 黑白名单</option>
+                    <option>rewrite — URI 改写、路径剥离、请求头注入</option>
+                    <option>header_filter — 添加/删除响应头、CORS 注入</option>
+                    <option>body_filter — 响应体改写、内容过滤、数据脱敏</option>
+                    <option>log — 审计日志、监控上报（异步，不影响响应）</option>
+                  </select>
+                </div>
+                <div class="f-hint">决定插件在请求生命周期中的执行位置，创建后不可修改</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="divider" />
+
+          <div class="f-section-title">Lua 代码</div>
+          <div class="f-section-body">
+            <div class="f-row">
+              <div class="f-label">代码：</div>
+              <div class="f-ctrl">
+                <div class="code-editor">
+                  <div class="code-body">
+                    <div class="code-nums"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div></div>
+                    <div class="code-area" contenteditable="true" spellcheck="false"><span class="cm">-- 插件名称：ip-rate-limit</span>
+<span class="cm">-- 执行阶段：access</span>
+
+<span class="kw">local</span> <span class="var">core</span>       = <span class="fn">require</span>(<span class="str">"apisix.core"</span>)
+<span class="kw">local</span> <span class="var">limit_req</span>  = <span class="fn">require</span>(<span class="str">"resty.limit.req"</span>)
+
+<span class="kw">local</span> <span class="var">_M</span> = {}
+
+<span class="kw">function</span> <span class="var">_M</span>.<span class="fn">access</span>(<span class="var">conf</span>, <span class="var">ctx</span>)
+    <span class="kw">local</span> <span class="var">key</span> = <span class="var">ctx</span>.<span class="var">var</span>.<span class="var">remote_addr</span>
+    <span class="cm">-- 令牌桶：rate 个/秒，burst 为允许的突发量</span>
+    <span class="kw">local</span> <span class="var">ok</span>, <span class="var">err</span> = <span class="fn">limit_req</span>(<span class="var">key</span>, <span class="var">conf</span>.<span class="var">rate</span>, <span class="var">conf</span>.<span class="var">burst</span>)
+    <span class="kw">if not</span> <span class="var">ok</span> <span class="kw">then</span>
+        <span class="kw">return</span> <span class="var">core</span>.<span class="fn">response</span>.<span class="fn">exit</span>(<span class="num">429</span>, { <span class="var">message</span> = <span class="str">"Too Many Requests"</span> })
+    <span class="kw">end</span>
+<span class="kw">end</span>
+
+<span class="kw">return</span> <span class="var">_M</span>
+</div>
+                  </div>
+                </div>
+                <div class="f-hint">支持 OpenResty Lua 语法，可调用 ngx.* / resty.* 标准库</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="divider" />
+
+          <div class="f-section-title">配置参数</div>
+          <div class="f-section-body">
+            <div class="f-row">
+              <div class="f-label">参数定义：</div>
+              <div class="f-ctrl">
+                <div style="display:grid;grid-template-columns:1fr 120px 80px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
+                  <span>参数名</span><span>类型</span><span>必填</span><span></span>
+                </div>
+                <div id="param-list">
+                  <div class="param-row">
+                    <input class="f-input" value="rate" placeholder="参数名" />
+                    <div class="sel-wrap"><select class="f-select"><option>string</option><option>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
+                    <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" checked style="accent-color:#1890ff" /> 必填</div>
+                    <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
+                  </div>
+                  <div class="param-row">
+                    <input class="f-input" value="burst" placeholder="参数名" />
+                    <div class="sel-wrap"><select class="f-select"><option>string</option><option>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
+                    <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" style="accent-color:#1890ff" /> 必填</div>
+                    <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
+                  </div>
+                </div>
+                <button class="btn" style="margin-top:8px;font-size:13px" onclick="addParam()">+ 添加参数</button>
+                <div class="f-hint">路由绑定此插件时，用户需要填写这些参数的值</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="f-footer">
+            <button class="btn" onclick="showPage('page-list')">取消</button>
+            <button class="btn btn-primary" onclick="showPage('page-list')">确 定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 编辑插件 ==================== -->
+    <div class="page" id="page-edit">
+      <div class="page-header">
+        <div class="page-title">编辑插件 · ip-rate-limit</div>
+        <button class="btn" onclick="showPage('page-list')">返回列表</button>
+      </div>
+      <div class="form-page">
+        <div class="form-wrap">
+          <div class="f-section-title">基础信息</div>
+          <div class="f-section-body">
+            <div class="f-row">
+              <div class="f-label"><span class="req">*</span>插件名称：</div>
+              <div class="f-ctrl">
+                <input class="f-input" value="ip-rate-limit" style="max-width:480px" />
+              </div>
+            </div>
+            <div class="f-row">
+              <div class="f-label">描述信息：</div>
+              <div class="f-ctrl">
+                <textarea class="f-textarea" rows="2" style="max-width:480px">基于客户端 IP 的请求频率限制，超限返回 429</textarea>
+              </div>
+            </div>
+            <div class="f-row">
+              <div class="f-label"><span class="req">*</span>执行阶段：</div>
+              <div class="f-ctrl">
+                <div class="sel-wrap" style="width:380px">
+                  <select class="f-select" disabled style="background:#fafafa;color:#8c8c8c">
+                    <option>access — 请求到达时执行，适用于鉴权、限流、黑白名单</option>
+                  </select>
+                </div>
+                <div class="f-hint">执行阶段创建后不可修改</div>
+              </div>
+            </div>
+          </div>
+          <hr class="divider" />
+          <div class="f-section-title">Lua 代码</div>
+          <div class="f-section-body">
+            <div class="f-row">
+              <div class="f-label">代码：</div>
+              <div class="f-ctrl">
+                <div class="code-editor">
+                  <div class="code-body">
+                    <div class="code-nums"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div></div>
+                    <div class="code-area" contenteditable="true" spellcheck="false"><span class="kw">local</span> <span class="var">core</span>      = <span class="fn">require</span>(<span class="str">"apisix.core"</span>)
+<span class="kw">local</span> <span class="var">limit_req</span> = <span class="fn">require</span>(<span class="str">"resty.limit.req"</span>)
+<span class="kw">local</span> <span class="var">_M</span> = {}
+
+<span class="kw">function</span> <span class="var">_M</span>.<span class="fn">access</span>(<span class="var">conf</span>, <span class="var">ctx</span>)
+    <span class="kw">local</span> <span class="var">key</span> = <span class="var">ctx</span>.<span class="var">var</span>.<span class="var">remote_addr</span>
+    <span class="kw">local</span> <span class="var">ok</span>, <span class="var">err</span> = <span class="fn">limit_req</span>(<span class="var">key</span>, <span class="var">conf</span>.<span class="var">rate</span>, <span class="var">conf</span>.<span class="var">burst</span>)
+    <span class="kw">if not</span> <span class="var">ok</span> <span class="kw">then</span>
+        <span class="kw">return</span> <span class="var">core</span>.<span class="fn">response</span>.<span class="fn">exit</span>(<span class="num">429</span>, { <span class="var">message</span> = <span class="str">"Too Many Requests"</span> })
+    <span class="kw">end</span>
+<span class="kw">end</span>
+<span class="kw">return</span> <span class="var">_M</span>
+</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <hr class="divider" />
+          <div class="f-section-title">配置参数</div>
+          <div class="f-section-body">
+            <div class="f-row">
+              <div class="f-label">参数定义：</div>
+              <div class="f-ctrl">
+                <div style="display:grid;grid-template-columns:1fr 120px 80px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
+                  <span>参数名</span><span>类型</span><span>必填</span><span></span>
+                </div>
+                <div id="param-list-edit">
+                  <div class="param-row">
+                    <input class="f-input" value="rate" />
+                    <div class="sel-wrap"><select class="f-select"><option>string</option><option selected>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
+                    <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" checked style="accent-color:#1890ff" /> 必填</div>
+                    <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
+                  </div>
+                  <div class="param-row">
+                    <input class="f-input" value="burst" />
+                    <div class="sel-wrap"><select class="f-select"><option>string</option><option selected>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
+                    <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" style="accent-color:#1890ff" /> 必填</div>
+                    <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
+                  </div>
+                </div>
+                <button class="btn" style="margin-top:8px;font-size:13px" onclick="addParamEdit()">+ 添加参数</button>
+              </div>
+            </div>
+          </div>
+          <div class="f-footer">
+            <button class="btn" onclick="showPage('page-list')">取消</button>
+            <button class="btn btn-primary" onclick="showPage('page-list')">保 存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 查看插件（详情） ==================== -->
+    <div class="page" id="page-detail">
+      <div class="page-header">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="page-title">ip-rate-limit</span>
+            <span class="tag-on">已发布</span>
+          </div>
+          <div class="text-gray text-sm mt-4">access 阶段 · 创建人：王铭浩</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="showPage('page-edit')">编辑</button>
+          <button class="btn" onclick="showPage('page-list')">返回列表</button>
+        </div>
+      </div>
+
+      <div class="detail-page">
+        <!-- 基础信息卡 -->
+        <div class="detail-card">
+          <div class="detail-card-hd">基础信息</div>
+          <div class="detail-card-bd">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-item-label">插件名称</span>
+                <span class="detail-item-value">ip-rate-limit</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">执行阶段</span>
+                <span class="detail-item-value"><span class="tag-blue">access</span></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">状态</span>
+                <span class="detail-item-value"><span class="tag-on">已发布</span></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">创建人</span>
+                <span class="detail-item-value">王铭浩</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">创建时间</span>
+                <span class="detail-item-value">2026/03/15 10:22:33</span>
+              </div>
+              <div class="detail-item full">
+                <span class="detail-item-label">描述信息</span>
+                <span class="detail-item-value">基于客户端 IP 的请求频率限制，超限返回 429</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lua 代码卡 -->
+        <div class="detail-card">
+          <div class="detail-card-hd">Lua 代码</div>
+          <div class="detail-card-bd" style="padding:0">
+            <div class="code-editor" style="border:none;border-radius:0">
+              <div class="code-body" style="min-height:200px">
+                <div class="code-nums">
+                  <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div>
+                  <div>6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+                  <div>11</div><div>12</div>
+                </div>
+                <div class="code-area"><span class="kw">local</span> <span class="var">core</span>      = <span class="fn">require</span>(<span class="str">"apisix.core"</span>)
+<span class="kw">local</span> <span class="var">limit_req</span> = <span class="fn">require</span>(<span class="str">"resty.limit.req"</span>)
+<span class="kw">local</span> <span class="var">_M</span> = {}
+
+<span class="kw">function</span> <span class="var">_M</span>.<span class="fn">access</span>(<span class="var">conf</span>, <span class="var">ctx</span>)
+    <span class="kw">local</span> <span class="var">key</span> = <span class="var">ctx</span>.<span class="var">var</span>.<span class="var">remote_addr</span>
+    <span class="kw">local</span> <span class="var">ok</span>, <span class="var">err</span> = <span class="fn">limit_req</span>(<span class="var">key</span>, <span class="var">conf</span>.<span class="var">rate</span>, <span class="var">conf</span>.<span class="var">burst</span>)
+    <span class="kw">if not</span> <span class="var">ok</span> <span class="kw">then</span>
+        <span class="kw">return</span> <span class="var">core</span>.<span class="fn">response</span>.<span class="fn">exit</span>(<span class="num">429</span>, { <span class="var">message</span> = <span class="str">"Too Many Requests"</span> })
+    <span class="kw">end</span>
+<span class="kw">end</span>
+<span class="kw">return</span> <span class="var">_M</span>
+</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 配置参数卡 -->
+        <div class="detail-card">
+          <div class="detail-card-hd">配置参数</div>
+          <div class="detail-card-bd" style="padding:0">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>参数名</th>
+                  <th>类型</th>
+                  <th>必填</th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>rate</td>
+                  <td><span class="tag-blue">integer</span></td>
+                  <td>是</td>
+                  <td class="text-gray">每秒最大请求数，最小值为 1</td>
+                </tr>
+                <tr>
+                  <td>burst</td>
+                  <td><span class="tag-blue">integer</span></td>
+                  <td>否</td>
+                  <td class="text-gray">允许的突发请求量，默认 0（不允许突发）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 路由列表 ==================== -->
+    <div class="page" id="page-route">
+      <div class="page-header"><div class="page-title">网关实例 · 路由管理</div></div>
+      <div class="content-card">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <button class="btn btn-primary" onclick="showPage('page-route-create');initWizard()">新建路由</button>
+            <button class="btn">刷 新</button>
+          </div>
+          <div class="toolbar-right">
+            <div class="search-box"><input type="text" placeholder="搜索路由名称" /><button class="s-btn">🔍</button></div>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>路由名称</th><th>路由ID</th><th>关联实例</th><th>域名</th><th>路径</th><th>描述</th><th>已绑定插件</th><th>状态</th><th>创建人</th><th>更新时间</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><button class="link" onclick="showPage('page-route-detail')">user-api-route</button></td>
+              <td class="text-gray">r-kqagwgcq</td>
+              <td>gtw-eazq696r</td>
+              <td>--</td>
+              <td>/api/v1/user/*</td>
+              <td class="text-gray">用户服务路由</td>
+              <td>
+                <span class="plugin-tag">ip-rate-limit</span>
+                <span class="plugin-tag">jwt-auth</span>
+              </td>
+              <td><span class="tag-on">已发布</span></td>
+              <td>王铭浩</td>
+              <td>2026/03/15 10:22:33</td>
+              <td><div class="ops">
+                <span class="op" onclick="showPage('page-route-detail')">查看</span>
+                <span class="op">下线</span>
+                <span class="op">更多</span>
+              </div></td>
+            </tr>
+            <tr>
+              <td><button class="link" onclick="showPage('page-route-detail')">order-post-route</button></td>
+              <td class="text-gray">r-m8bnc21x</td>
+              <td>gtw-eazq696r</td>
+              <td>--</td>
+              <td>/api/v1/order</td>
+              <td class="text-gray">订单提交路由</td>
+              <td>
+                <span class="plugin-tag">ip-blacklist</span>
+              </td>
+              <td><span class="tag-on">已发布</span></td>
+              <td>徐鹏志</td>
+              <td>2026/03/10 14:05:00</td>
+              <td><div class="ops">
+                <span class="op" onclick="showPage('page-route-detail')">查看</span>
+                <span class="op">下线</span>
+                <span class="op">更多</span>
+              </div></td>
+            </tr>
+            <tr>
+              <td><button class="link" onclick="showPage('page-route-detail')">payment-callback</button></td>
+              <td class="text-gray">r-p9xwt5fz</td>
+              <td>gtw-g7mtqnai</td>
+              <td>pay.example.com</td>
+              <td>/callback/*</td>
+              <td class="text-gray">支付回调路由</td>
+              <td class="text-gray">--</td>
+              <td><span class="tag-draft">未发布</span></td>
+              <td>何伟军</td>
+              <td>2026/03/18 09:00:00</td>
+              <td><div class="ops">
+                <span class="op" onclick="showPage('page-route-detail')">查看</span>
+                <span class="op">发布</span>
+                <span class="op">更多</span>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== 路由创建/编辑（三步向导） ==================== -->
+    <div class="page" id="page-route-create" style="flex-direction:column">
+      <!-- 页头 -->
+      <div class="page-header">
+        <div class="page-title" id="wizard-page-title">新建路由</div>
+        <button class="btn" onclick="showPage('page-route')">返回列表</button>
+      </div>
+
+      <!-- 步骤条 -->
+      <div class="wizard-header">
+        <div class="wizard-steps">
+          <div class="step">
+            <div class="step-circle active" id="sc1">1</div>
+            <span class="step-label active" id="sl1">路由规则</span>
+          </div>
+          <div class="step-line" id="line1"></div>
+          <div class="step">
+            <div class="step-circle" id="sc2">2</div>
+            <span class="step-label" id="sl2">服务器组</span>
+          </div>
+          <div class="step-line" id="line2"></div>
+          <div class="step">
+            <div class="step-circle" id="sc3">3</div>
+            <span class="step-label" id="sl3">插件配置</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 各步内容 -->
+      <div class="wizard-body">
+
+        <!-- Step 1: 路由规则 -->
+        <div class="wizard-step-content active" id="wstep1">
+          <div class="form-wrap" style="margin:16px">
+            <div class="f-section-title">路由规则</div>
+            <div class="f-section-body">
+              <div class="f-row">
+                <div class="f-label"><span class="req">*</span>路由名称：</div>
+                <div class="f-ctrl">
+                  <input class="f-input" value="user-api-route" style="max-width:400px" />
+                  <div class="f-hint">字母、数字、连字符，全局唯一，创建后不可修改</div>
+                </div>
+              </div>
+              <div class="f-row">
+                <div class="f-label"><span class="req">*</span>请求方法：</div>
+                <div class="f-ctrl">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" checked style="accent-color:#1890ff"> GET</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" style="accent-color:#1890ff"> POST</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" style="accent-color:#1890ff"> PUT</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" style="accent-color:#1890ff"> DELETE</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" style="accent-color:#1890ff"> PATCH</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" style="accent-color:#1890ff"> HEAD</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" style="accent-color:#1890ff"> OPTIONS</label>
+                  </div>
+                  <div class="f-hint">不勾选任何方法则匹配所有方法</div>
+                </div>
+              </div>
+              <div class="f-row">
+                <div class="f-label"><span class="req">*</span>路径：</div>
+                <div class="f-ctrl">
+                  <input class="f-input" value="/api/v1/user/*" style="max-width:400px" />
+                  <div class="f-hint">支持精确匹配（/foo）和前缀匹配（/foo/*），* 表示通配</div>
+                </div>
+              </div>
+              <div class="f-row">
+                <div class="f-label">Host：</div>
+                <div class="f-ctrl">
+                  <input class="f-input" placeholder="例：api.example.com，不填则匹配所有 Host" style="max-width:400px" />
+                </div>
+              </div>
+              <div class="f-row">
+                <div class="f-label">优先级：</div>
+                <div class="f-ctrl">
+                  <input class="f-input" type="number" value="0" style="width:120px" />
+                  <div class="f-hint">多条路由同时匹配时，数值越大越优先，默认 0</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: 服务器组 -->
+        <div class="wizard-step-content" id="wstep2">
+          <div class="form-wrap" style="margin:16px">
+            <div class="f-section-title">服务器组</div>
+            <div class="f-section-body">
+              <div class="f-row">
+                <div class="f-label"><span class="req">*</span>服务器组：</div>
+                <div class="f-ctrl">
+                  <div class="sel-wrap" style="width:360px">
+                    <select class="f-select">
+                      <option>user-upstream（192.168.1.10:8080, 192.168.1.11:8080）</option>
+                      <option>order-upstream（192.168.2.10:8080）</option>
+                      <option>payment-upstream（192.168.3.10:8080, 192.168.3.11:8080）</option>
+                    </select>
+                  </div>
+                  <div class="f-hint">流量将转发至所选服务器组，服务器组在网关实例中统一管理</div>
+                </div>
+              </div>
+              <div class="f-row">
+                <div class="f-label">负载策略：</div>
+                <div class="f-ctrl">
+                  <div class="sel-wrap" style="width:280px">
+                    <select class="f-select">
+                      <option>轮询（Round Robin）</option>
+                      <option>加权轮询（Weighted Round Robin）</option>
+                      <option>最少连接（Least Connections）</option>
+                      <option>IP 哈希（IP Hash）</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="f-row">
+                <div class="f-label">连接超时：</div>
+                <div class="f-ctrl">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input class="f-input" type="number" value="60" style="width:100px" />
+                    <span class="text-gray">秒</span>
+                  </div>
+                  <div class="f-hint">与上游建立 TCP 连接的最大等待时间</div>
+                </div>
+              </div>
+              <div class="f-row">
+                <div class="f-label">读取超时：</div>
+                <div class="f-ctrl">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input class="f-input" type="number" value="60" style="width:100px" />
+                    <span class="text-gray">秒</span>
+                  </div>
+                  <div class="f-hint">等待上游响应的最大时间</div>
+                </div>
+              </div>
+              <div class="f-row">
+                <div class="f-label">发送超时：</div>
+                <div class="f-ctrl">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input class="f-input" type="number" value="60" style="width:100px" />
+                    <span class="text-gray">秒</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: 插件配置 -->
+        <div class="wizard-step-content" id="wstep3">
+          <div class="form-wrap" style="margin:16px">
+            <div class="f-section-title" style="display:flex;align-items:center;justify-content:space-between">
+              插件配置
+              <button class="btn btn-primary" style="font-size:13px;padding:4px 12px" onclick="showPicker()">+ 添加插件</button>
+            </div>
+            <div style="padding:16px 24px">
+              <div id="bound-list">
+              </div>
+
+              <div id="empty-tip" style="color:#8c8c8c;text-align:center;padding:40px 0;font-size:14px">
+                暂未绑定任何插件，点击右上角「添加插件」进行绑定
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 向导底部按钮 -->
+      <div class="wizard-footer">
+        <div>
+          <button class="btn" id="btn-prev" onclick="wizardPrev()" style="display:none">上一步</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="showPage('page-route')">取消</button>
+          <button class="btn btn-primary" id="btn-next" onclick="wizardNext()">下一步</button>
+          <button class="btn btn-primary" id="btn-submit" onclick="showPage('page-route')" style="display:none">完 成</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 路由详情 ==================== -->
+    <div class="page" id="page-route-detail">
+      <div class="page-header">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="page-title">user-api-route</span>
+            <span class="tag-on">已发布</span>
+          </div>
+          <div class="text-gray text-sm mt-4">r-kqagwgcq · gtw-eazq696r</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="showPage('page-route-create');initWizard()">编辑</button>
+          <button class="btn" onclick="showPage('page-route')">返回列表</button>
+        </div>
+      </div>
+
+      <div class="detail-page">
+        <!-- 基础信息 -->
+        <div class="detail-card">
+          <div class="detail-card-hd">基础信息</div>
+          <div class="detail-card-bd">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-item-label">路由名称</span>
+                <span class="detail-item-value">user-api-route</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">路由 ID</span>
+                <span class="detail-item-value" style="font-family:monospace">r-kqagwgcq</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">状态</span>
+                <span class="detail-item-value"><span class="tag-on">已发布</span></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">请求方法</span>
+                <span class="detail-item-value">GET</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">路径</span>
+                <span class="detail-item-value" style="font-family:monospace">/api/v1/user/*</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">Host</span>
+                <span class="detail-item-value text-gray">--</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">优先级</span>
+                <span class="detail-item-value">0</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">创建人</span>
+                <span class="detail-item-value">王铭浩</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">更新时间</span>
+                <span class="detail-item-value">2026/03/15 10:22:33</span>
+              </div>
+              <div class="detail-item full">
+                <span class="detail-item-label">描述</span>
+                <span class="detail-item-value">用户服务路由</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 服务器组 -->
+        <div class="detail-card">
+          <div class="detail-card-hd">服务器组</div>
+          <div class="detail-card-bd">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-item-label">服务器组</span>
+                <span class="detail-item-value">user-upstream</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">负载策略</span>
+                <span class="detail-item-value">轮询（Round Robin）</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">连接超时</span>
+                <span class="detail-item-value">60 秒</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">读取超时</span>
+                <span class="detail-item-value">60 秒</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">发送超时</span>
+                <span class="detail-item-value">60 秒</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 插件配置 -->
+        <div class="detail-card">
+          <div class="detail-card-hd">插件配置</div>
+          <div class="detail-card-bd" style="padding:0">
+            <!-- 插件 1 -->
+            <div style="border-bottom:1px solid #f0f0f0">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:#fafafa">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-weight:500">ip-rate-limit</span>
+                  <span class="tag-blue" style="font-size:11px">access</span>
+                  <span class="text-gray text-sm">基于客户端 IP 的请求频率限制，超限返回 429</span>
+                  <span class="text-gray text-sm" style="margin-left:8px">执行顺序：10</span>
+                </div>
+              </div>
+              <div style="padding:16px 24px">
+                <table class="data-table" style="width:auto;min-width:400px">
+                  <thead><tr><th>参数</th><th>值</th></tr></thead>
+                  <tbody>
+                    <tr><td>rate</td><td>100</td></tr>
+                    <tr><td>burst</td><td>20</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <!-- 插件 2 -->
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:#fafafa">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-weight:500">jwt-auth</span>
+                  <span class="tag-blue" style="font-size:11px">access</span>
+                  <span class="text-gray text-sm">校验请求头中的 JWT Token，鉴权失败返回 401</span>
+                  <span class="text-gray text-sm" style="margin-left:8px">执行顺序：20</span>
+                </div>
+              </div>
+              <div style="padding:16px 24px">
+                <table class="data-table" style="width:auto;min-width:400px">
+                  <thead><tr><th>参数</th><th>值</th></tr></thead>
+                  <tbody>
+                    <tr><td>secret_header</td><td>Authorization</td></tr>
+                    <tr><td>expire_check</td><td>true</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /layout -->
+
+
+<!-- ==================== Modal: 选择插件 ==================== -->
+<div class="mask" id="picker-modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">选择插件</span>
+      <button class="modal-close" onclick="hidePicker()">✕</button>
+    </div>
+    <div class="modal-bd">
+      <div class="search-box" style="width:100%;margin-bottom:12px">
+        <input type="text" placeholder="搜索插件名称" style="width:100%" />
+        <button class="s-btn">🔍</button>
+      </div>
+      <div class="pick-list">
+        <div class="pick-item" onclick="pickPlugin(this,'ip-rate-limit','access','基于客户端 IP 的请求频率限制，超限返回 429')">
+          <input type="radio" class="pick-radio" name="pr" />
+          <div style="flex:1">
+            <div class="pick-name">ip-rate-limit</div>
+            <div class="pick-desc">基于客户端 IP 的请求频率限制，超限返回 429</div>
+          </div>
+          <span class="pick-stage">access</span>
+        </div>
+        <div class="pick-item" onclick="pickPlugin(this,'jwt-auth','access','校验请求头中的 JWT Token，鉴权失败返回 401')">
+          <input type="radio" class="pick-radio" name="pr" />
+          <div style="flex:1">
+            <div class="pick-name">jwt-auth</div>
+            <div class="pick-desc">校验请求头中的 JWT Token，鉴权失败返回 401</div>
+          </div>
+          <span class="pick-stage">access</span>
+        </div>
+        <div class="pick-item" onclick="pickPlugin(this,'request-rewrite','rewrite','改写请求 URI 并在转发前统一注入业务标识请求头')">
+          <input type="radio" class="pick-radio" name="pr" />
+          <div style="flex:1">
+            <div class="pick-name">request-rewrite</div>
+            <div class="pick-desc">改写请求 URI 并在转发前统一注入业务标识请求头</div>
+          </div>
+          <span class="pick-stage">rewrite</span>
+        </div>
+        <div class="pick-item" onclick="pickPlugin(this,'ip-blacklist','access','拦截黑名单 IP 发来的请求，命中后直接返回 403')">
+          <input type="radio" class="pick-radio" name="pr" />
+          <div style="flex:1">
+            <div class="pick-name">ip-blacklist</div>
+            <div class="pick-desc">拦截黑名单 IP 发来的请求，命中后直接返回 403</div>
+          </div>
+          <span class="pick-stage">access</span>
+        </div>
+        <div class="pick-item" onclick="pickPlugin(this,'cors-handler','header_filter','统一处理跨域预检请求，并向响应注入 CORS 头')">
+          <input type="radio" class="pick-radio" name="pr" />
+          <div style="flex:1">
+            <div class="pick-name">cors-handler</div>
+            <div class="pick-desc">统一处理跨域预检请求，并向响应注入 CORS 头</div>
+          </div>
+          <span class="pick-stage">header_filter</span>
+        </div>
+        <div class="pick-item" onclick="pickPlugin(this,'access-logger','log','将请求明细异步投递至 Kafka，用于访问审计与监控上报')">
+          <input type="radio" class="pick-radio" name="pr" />
+          <div style="flex:1">
+            <div class="pick-name">access-logger</div>
+            <div class="pick-desc">将请求明细异步投递至 Kafka，用于访问审计与监控上报</div>
+          </div>
+          <span class="pick-stage">log</span>
+        </div>
+      </div>
+
+      <!-- 配置参数区已移至绑定卡片内填写，此处不再重复 -->
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="hidePicker()">取消</button>
+      <button class="btn btn-primary" onclick="confirmPick()">确定绑定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 转移插件 -->
+<div class="mask" id="transfer-modal">
+  <div class="modal confirm-modal" style="width:400px">
+    <div class="modal-hd">
+      <span class="modal-title">转移插件</span>
+      <button class="modal-close" onclick="document.getElementById('transfer-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-bd" style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+      <div style="background:#fffbe6;border:1px solid #ffe58f;border-radius:2px;padding:9px 12px;display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#614700">
+        <span style="color:#faad14;flex-shrink:0;font-size:14px;line-height:1.6">ℹ</span>
+        <span>插件权限转移后不可收回</span>
+      </div>
+      <div class="sel-wrap">
+        <select class="f-select" id="transfer-select" style="color:#bfbfbf">
+          <option value="" disabled selected style="color:#bfbfbf">请选择接收人</option>
+          <option value="xupengzhi" style="color:#000000d9">徐鹏志</option>
+          <option value="huanghuashuai" style="color:#000000d9">黄华帅</option>
+          <option value="heweijun" style="color:#000000d9">何伟军</option>
+          <option value="zhangxi" style="color:#000000d9">张曦</option>
+          <option value="chengliang" style="color:#000000d9">程靓</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="document.getElementById('transfer-modal').classList.remove('open')">取消</button>
+      <button class="btn btn-primary" onclick="document.getElementById('transfer-modal').classList.remove('open')">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 删除确认 -->
+<div class="mask" id="del-modal">
+  <div class="modal confirm-modal">
+    <div class="modal-hd">
+      <span class="modal-title"><span style="color:#ff4d4f;margin-right:6px">⚠</span>确认删除</span>
+      <button class="modal-close" onclick="document.getElementById('del-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-bd" style="padding:20px">
+      <p>确定要删除插件 <strong id="del-name"></strong> 吗？</p>
+      <p style="margin-top:8px;color:#8c8c8c;font-size:13px">删除后不可恢复，已绑定该插件的路由将自动解除关联。</p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="document.getElementById('del-modal').classList.remove('open')">取消</button>
+      <button class="btn btn-danger" onclick="document.getElementById('del-modal').classList.remove('open')">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 发布草稿确认 -->
+<div class="mask" id="publish-draft-modal">
+  <div class="modal confirm-modal" style="width:480px">
+    <div class="modal-hd">
+      <span class="modal-title"><span style="color:#faad14;margin-right:6px">⚠</span>确认发布草稿</span>
+      <button class="modal-close" onclick="document.getElementById('publish-draft-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-bd" style="padding:20px 24px">
+      <p style="margin-bottom:12px">发布后已绑定此插件的所有路由同步生效，请确认以下事项：</p>
+      <div style="background:#fffbe6;border:1px solid #ffe58f;border-radius:2px;padding:12px 16px;font-size:13px;line-height:2">
+        <div>· 新版本的<strong>参数名称、类型和必填项</strong>与现有路由绑定配置兼容，否则相关路由的参数将失效</div>
+        <div>· Lua 代码已完成测试，不会产生运行时异常或影响线上流量</div>
+        <div>· 若新增了必填参数，发布后需及时更新各路由的绑定配置</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="document.getElementById('publish-draft-modal').classList.remove('open')">取消</button>
+      <button class="btn btn-primary" onclick="confirmPublishDraft()">确认发布</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 页面切换
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function nav(pageId, menuId) {
+  showPage(pageId);
+  document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+  const el = document.getElementById(menuId);
+  if (el) el.classList.add('active');
+}
+
+// 侧边栏折叠
+function toggleGroup(id) {
+  const el = document.getElementById(id);
+  const arr = document.getElementById('arr-' + id);
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (arr) arr.classList.toggle('open', !open);
+}
+
+// 添加配置参数行
+function addParam() { appendParamRow(document.getElementById('param-list')); }
+function addParamEdit() { appendParamRow(document.getElementById('param-list-edit')); }
+function appendParamRow(list) {
+  const div = document.createElement('div');
+  div.className = 'param-row';
+  div.innerHTML = `
+    <input class="f-input" placeholder="参数名" />
+    <div class="sel-wrap"><select class="f-select"><option>string</option><option>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" style="accent-color:#1890ff" /> 必填</div>
+    <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
+  `;
+  list.appendChild(div);
+}
+
+// 转移插件
+function showTransfer(name) {
+  document.getElementById('transfer-modal').classList.add('open');
+}
+
+// 删除确认
+function showDel(name) {
+  document.getElementById('del-name').textContent = name;
+  document.getElementById('del-modal').classList.add('open');
+}
+
+// ===== 步骤向导 =====
+let currentStep = 1;
+const TOTAL_STEPS = 3;
+
+function initWizard(startStep) {
+  currentStep = startStep || 1;
+  renderWizard();
+}
+
+function renderWizard() {
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const sc = document.getElementById('sc' + i);
+    const sl = document.getElementById('sl' + i);
+    const content = document.getElementById('wstep' + i);
+    if (i < currentStep) {
+      sc.className = 'step-circle done'; sc.textContent = '✓';
+      sl.className = 'step-label done';
+    } else if (i === currentStep) {
+      sc.className = 'step-circle active'; sc.textContent = i;
+      sl.className = 'step-label active';
+    } else {
+      sc.className = 'step-circle'; sc.textContent = i;
+      sl.className = 'step-label';
+    }
+    content.className = 'wizard-step-content' + (i === currentStep ? ' active' : '');
+    if (i < TOTAL_STEPS) {
+      document.getElementById('line' + i).className = 'step-line' + (i < currentStep ? ' done' : '');
+    }
+  }
+  document.getElementById('btn-prev').style.display = currentStep > 1 ? 'inline-flex' : 'none';
+  document.getElementById('btn-next').style.display = currentStep < TOTAL_STEPS ? 'inline-flex' : 'none';
+  document.getElementById('btn-submit').style.display = currentStep === TOTAL_STEPS ? 'inline-flex' : 'none';
+}
+
+function wizardNext() {
+  if (currentStep < TOTAL_STEPS) { currentStep++; renderWizard(); }
+}
+function wizardPrev() {
+  if (currentStep > 1) { currentStep--; renderWizard(); }
+}
+
+// 插件选择器
+let selPlugin = null;
+const pluginParams = {
+  'ip-rate-limit':   [['rate','integer',true],['burst','integer',false]],
+  'jwt-auth':        [['secret_header','string',true],['expire_check','boolean',false]],
+  'request-rewrite': [['add_headers','string',false],['strip_prefix','string',false]],
+  'ip-blacklist':    [['blacklist','string',true]],
+  'cors-handler':    [['allow_origins','string',true],['allow_methods','string',false]],
+  'access-logger':   [['kafka_brokers','string',true],['topic','string',true]],
+};
+
+function showPicker() {
+  selPlugin = null;
+  document.querySelectorAll('.pick-item').forEach(i => {
+    i.classList.remove('sel');
+    const radio = i.querySelector('.pick-radio');
+    if (radio) radio.checked = false;
+  });
+  document.getElementById('picker-modal').classList.add('open');
+}
+function hidePicker() { document.getElementById('picker-modal').classList.remove('open'); }
+
+function pickPlugin(el, name, stage, desc) {
+  document.querySelectorAll('.pick-item').forEach(i => i.classList.remove('sel'));
+  el.classList.add('sel');
+  el.querySelector('.pick-radio').checked = true;
+  selPlugin = { name, stage, desc };
+}
+
+function confirmPick() {
+  if (!selPlugin) { alert('请先选择插件'); return; }
+  const container = document.getElementById('bound-list');
+  const card = document.createElement('div');
+  card.className = 'bound-card';
+  const params = (pluginParams[selPlugin.name] || []).map(([k, t, r]) =>
+    `<tr><td>${k}${r ? ' <span style="color:#ff4d4f;font-size:11px">必填</span>' : ''}</td><td><input class="f-input" placeholder="请输入" style="width:200px" /></td></tr>`
+  ).join('');
+  card.innerHTML = `
+    <div class="bound-card-hd">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-weight:500">${selPlugin.name}</span>
+        <span class="tag-blue" style="font-size:11px">${selPlugin.stage}</span>
+        <span class="text-gray text-sm">${selPlugin.desc}</span>
+        <span style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:12px;color:#595959">
+          执行顺序：<input type="number" class="f-input" value="10" min="1"
+            style="width:64px;height:26px;font-size:12px;padding:0 6px" />
+          <span class="text-gray" style="font-size:11px">（同阶段内生效，越大越先执行）</span>
+        </span>
+      </div>
+      <div style="display:flex;gap:12px">
+        <span class="op" onclick="toggleCard(this)">收起</span>
+        <span class="op danger" onclick="this.closest('.bound-card').remove();checkEmpty()">解绑</span>
+      </div>
+    </div>
+    <div class="bound-card-bd">
+      ${params ? `<table class="param-table"><thead><tr><th style="width:200px">参数</th><th>值</th></tr></thead><tbody>${params}</tbody></table>` : '<div class="text-gray text-sm">该插件无需配置参数</div>'}
+    </div>
+  `;
+  container.appendChild(card);
+  hidePicker();
+  checkEmpty();
+}
+
+function toggleCard(btn) {
+  const bd = btn.closest('.bound-card').querySelector('.bound-card-bd');
+  const open = bd.style.display !== 'none';
+  bd.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '展开' : '收起';
+}
+
+function checkEmpty() {
+  const empty = document.getElementById('bound-list').children.length === 0;
+  document.getElementById('empty-tip').style.display = empty ? 'block' : 'none';
+}
+checkEmpty();
+
+// 发布草稿（带二次确认）
+let _pendingPublishKey = null;
+function showPublishConfirm(key) {
+  _pendingPublishKey = key;
+  document.getElementById('publish-draft-modal').classList.add('open');
+}
+function confirmPublishDraft() {
+  document.getElementById('publish-draft-modal').classList.remove('open');
+  if (_pendingPublishKey) { publishDraft(_pendingPublishKey); _pendingPublishKey = null; }
+}
+
+// 草稿展开/收起
+function toggleDraft(key) {
+  const row = document.getElementById('draft-' + key);
+  const btn = document.getElementById('exp-' + key);
+  if (!row) return;
+  const isOpen = row.style.display !== 'none';
+  row.style.display = isOpen ? 'none' : 'table-row';
+  if (btn) {
+    btn.textContent = isOpen ? '+' : '−';
+    btn.setAttribute('data-tip', isOpen ? '有未发布草稿，点击展开' : '点击收起草稿');
+  }
+}
+
+// 发布草稿（用草稿的时间和描述覆盖主行，然后移除草稿行）
+function publishDraft(key) {
+  const draftRow = document.getElementById('draft-' + key);
+  const mainRow  = document.getElementById('main-'  + key);
+  const expBtn   = document.getElementById('exp-'   + key);
+  if (!draftRow || !mainRow) return;
+  mainRow.cells[3].textContent = draftRow.cells[3].textContent; // 更新时间
+  mainRow.cells[4].textContent = draftRow.cells[4].textContent; // 更新描述
+  draftRow.remove();
+  const spacer = document.createElement('span');
+  spacer.style.cssText = 'width:18px;display:inline-block';
+  expBtn.replaceWith(spacer);
+}
+
+// 删除草稿
+function deleteDraft(key) {
+  const draftRow = document.getElementById('draft-' + key);
+  const expBtn   = document.getElementById('exp-'   + key);
+  if (draftRow) draftRow.remove();
+  if (expBtn) {
+    const spacer = document.createElement('span');
+    spacer.style.cssText = 'width:18px;display:inline-block';
+    expBtn.replaceWith(spacer);
+  }
+}
+
+// ESC 关闭
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.mask.open').forEach(m => m.classList.remove('open'));
+});
+</script>
+</body>
+</html>
