@@ -609,20 +609,6 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                   <span>参数名</span><span>类型</span><span>默认值</span><span>必填</span><span></span>
                 </div>
                 <div id="param-list">
-                  <div class="param-row">
-                    <input class="f-input" value="rate" placeholder="参数名" />
-                    <div class="sel-wrap"><select class="f-select"><option>string</option><option>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
-                    <input class="f-input" placeholder="可选" />
-                    <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" checked style="accent-color:#1890ff" /> 必填</div>
-                    <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
-                  </div>
-                  <div class="param-row">
-                    <input class="f-input" value="burst" placeholder="参数名" />
-                    <div class="sel-wrap"><select class="f-select"><option>string</option><option>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
-                    <input class="f-input" placeholder="可选" />
-                    <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" style="accent-color:#1890ff" /> 必填</div>
-                    <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
-                  </div>
                 </div>
                 <button class="btn" style="margin-top:8px;font-size:13px" onclick="addParam()">+ 添加参数</button>
                 <div class="f-hint">路由绑定此插件时，用户需要填写这些参数的值</div>
