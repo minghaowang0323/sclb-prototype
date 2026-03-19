@@ -437,7 +437,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                 <span class="op">查看</span>
                 <span class="op" onclick="showPage('page-edit')">编辑</span>
                 <span class="op gray" title="未发布插件不可转移">转移</span>
-                <span class="op">发布</span>
+                <span class="op" onclick="showPublishPlugin('response-cache')">发布</span>
                 <span class="op danger" onclick="showDel('response-cache')">删除</span>
               </div></td>
             </tr>
@@ -503,7 +503,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                 <span class="op">查看</span>
                 <span class="op" onclick="showPage('page-edit')">编辑</span>
                 <span class="op gray" title="未发布插件不可转移">转移</span>
-                <span class="op">发布</span>
+                <span class="op" onclick="showPublishPlugin('access-logger')">发布</span>
                 <span class="op danger" onclick="showDel('access-logger')">删除</span>
               </div></td>
             </tr>
@@ -661,11 +661,16 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-label"><span class="req">*</span>执行阶段：</div>
               <div class="f-ctrl">
                 <div class="sel-wrap" style="width:380px">
-                  <select class="f-select" disabled style="background:#fafafa;color:#8c8c8c">
-                    <option>access — 访问控制、鉴权、限流</option>
+                  <select class="f-select">
+                    <option selected>access — 访问控制、鉴权、限流</option>
+                    <option>rewrite — 路由匹配后、转发前，改写请求</option>
+                    <option>before_proxy — 转发上游前，最后一次修改请求</option>
+                    <option>header_filter — 上游响应头返回时</option>
+                    <option>body_filter — 上游响应体返回时</option>
+                    <option>log — 请求结束后异步执行</option>
                   </select>
                 </div>
-                <div class="f-hint">执行阶段创建后不可修改</div>
+                <div class="f-hint">修改执行阶段后请确认 Lua 代码与新阶段兼容</div>
               </div>
             </div>
           </div>
@@ -1367,6 +1372,22 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 </div>
 
 <!-- Modal: 发布草稿确认 -->
+<div class="mask" id="publish-plugin-modal">
+  <div class="modal confirm-modal" style="width:400px">
+    <div class="modal-hd">
+      <span class="modal-title"><span style="color:#faad14;margin-right:6px">!</span>发布插件</span>
+      <button class="modal-close" onclick="document.getElementById('publish-plugin-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-bd" style="padding:20px 24px">
+      <p>确认发布 <strong id="publish-plugin-name"></strong> 吗？</p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="document.getElementById('publish-plugin-modal').classList.remove('open')">取 消</button>
+      <button class="btn btn-primary" onclick="document.getElementById('publish-plugin-modal').classList.remove('open')">确 定</button>
+    </div>
+  </div>
+</div>
+
 <div class="mask" id="publish-draft-modal">
   <div class="modal confirm-modal" style="width:480px">
     <div class="modal-hd">
@@ -1555,6 +1576,11 @@ checkEmpty();
 
 // 发布草稿（带二次确认）
 let _pendingPublishKey = null;
+function showPublishPlugin(name) {
+  document.getElementById('publish-plugin-name').textContent = name;
+  document.getElementById('publish-plugin-modal').classList.add('open');
+}
+
 function showPublishConfirm(key) {
   _pendingPublishKey = key;
   document.getElementById('publish-draft-modal').classList.add('open');
