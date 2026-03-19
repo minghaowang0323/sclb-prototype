@@ -548,11 +548,12 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-ctrl">
                 <div class="sel-wrap" style="width:380px">
                   <select class="f-select">
-                    <option>access — 鉴权、限流、IP 黑白名单</option>
-                    <option>rewrite — URI 改写、路径剥离、请求头注入</option>
-                    <option>header_filter — 添加/删除响应头、CORS 注入</option>
-                    <option>body_filter — 响应体改写、内容过滤、数据脱敏</option>
-                    <option>log — 审计日志、监控上报（异步，不影响响应）</option>
+                    <option>rewrite — 路由匹配后、转发前，改写请求</option>
+                    <option>access — 访问控制、鉴权、限流</option>
+                    <option>before_proxy — 转发上游前，最后一次修改请求</option>
+                    <option>header_filter — 上游响应头返回时</option>
+                    <option>body_filter — 上游响应体返回时</option>
+                    <option>log — 请求结束后异步执行</option>
                   </select>
                 </div>
                 <div class="f-hint">决定插件在请求生命周期中的执行位置，创建后不可修改</div>
@@ -661,7 +662,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-ctrl">
                 <div class="sel-wrap" style="width:380px">
                   <select class="f-select" disabled style="background:#fafafa;color:#8c8c8c">
-                    <option>access — 请求到达时执行，适用于鉴权、限流、黑白名单</option>
+                    <option>access — 访问控制、鉴权、限流</option>
                   </select>
                 </div>
                 <div class="f-hint">执行阶段创建后不可修改</div>
