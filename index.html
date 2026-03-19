@@ -1114,15 +1114,17 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
           <div class="text-gray text-sm mt-4">r-kqagwgcq · gtw-eazq696r</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="showPage('page-route-create');initWizard()">编辑</button>
-          <button class="btn" onclick="showPage('page-route')">返回列表</button>
+          <button class="btn" onclick="showPage('page-route')">返回</button>
         </div>
       </div>
 
       <div class="detail-page">
         <!-- 基础信息 -->
         <div class="detail-card">
-          <div class="detail-card-hd">基础信息</div>
+          <div class="detail-card-hd" style="display:flex;align-items:center;justify-content:space-between">
+            <span>基础信息</span>
+            <button class="btn" style="font-size:13px;padding:3px 10px" onclick="showPage('page-route-create');initWizard()">编辑</button>
+          </div>
           <div class="detail-card-bd">
             <div class="detail-grid">
               <div class="detail-item">
@@ -1169,13 +1171,16 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
           </div>
         </div>
 
-        <!-- 服务器组 -->
+        <!-- 后端服务器组 -->
         <div class="detail-card">
-          <div class="detail-card-hd">服务器组</div>
+          <div class="detail-card-hd" style="display:flex;align-items:center;justify-content:space-between">
+            <span>后端服务器组</span>
+            <button class="btn" style="font-size:13px;padding:3px 10px" onclick="showPage('page-route-create');initWizard()">编辑</button>
+          </div>
           <div class="detail-card-bd">
             <div class="detail-grid">
               <div class="detail-item">
-                <span class="detail-item-label">服务器组</span>
+                <span class="detail-item-label">后端服务器组</span>
                 <span class="detail-item-value">user-upstream</span>
               </div>
               <div class="detail-item">
