@@ -525,7 +525,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
     <div class="page" id="page-create">
       <div class="page-header">
         <div class="page-title">新建插件</div>
-        <button class="btn" onclick="showPage('page-list')">返回列表</button>
+        <button class="btn btn-primary" onclick="showPage('page-list')">返回</button>
       </div>
       <div class="form-page">
         <div class="form-wrap">
@@ -639,7 +639,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
     <div class="page" id="page-edit">
       <div class="page-header">
         <div class="page-title">编辑插件 · ip-rate-limit</div>
-        <button class="btn" onclick="showPage('page-list')">返回列表</button>
+        <button class="btn btn-primary" onclick="showPage('page-list')">返回</button>
       </div>
       <div class="form-page">
         <div class="form-wrap">
@@ -746,10 +746,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
           </div>
           <div class="text-gray text-sm mt-4">access 阶段 · 创建人：王铭浩</div>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn" onclick="showPage('page-edit')">编辑</button>
-          <button class="btn" onclick="showPage('page-list')">返回列表</button>
-        </div>
+        <button class="btn btn-primary" onclick="showPage('page-list')">返回</button>
       </div>
 
       <div class="detail-page">
@@ -930,7 +927,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
       <!-- 页头 -->
       <div class="page-header">
         <div class="page-title" id="wizard-page-title">新建路由</div>
-        <button class="btn" onclick="showPage('page-route')">返回列表</button>
+        <button class="btn btn-primary" onclick="showPage('page-route')">返回</button>
       </div>
 
       <!-- 步骤条 -->
@@ -1114,16 +1111,16 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
           <div class="text-gray text-sm mt-4">r-kqagwgcq · gtw-eazq696r</div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn" onclick="showPage('page-route')">返回</button>
+          <button class="btn btn-primary" onclick="showPage('page-route')">返回</button>
         </div>
       </div>
 
       <div class="detail-page">
         <!-- 基础信息 -->
         <div class="detail-card">
-          <div class="detail-card-hd" style="display:flex;align-items:center;justify-content:space-between">
+          <div class="detail-card-hd" style="display:flex;align-items:center;gap:12px">
             <span>基础信息</span>
-            <button class="btn" style="font-size:13px;padding:3px 10px" onclick="showPage('page-route-create');initWizard()">编辑</button>
+            <span class="link" style="font-size:13px;font-weight:400" onclick="showPage('page-route-create');initWizard()">编辑</span>
           </div>
           <div class="detail-card-bd">
             <div class="detail-grid">
@@ -1138,18 +1135,6 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="detail-item">
                 <span class="detail-item-label">状态</span>
                 <span class="detail-item-value"><span class="tag-on">已发布</span></span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-item-label">请求方法</span>
-                <span class="detail-item-value">GET</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-item-label">路径</span>
-                <span class="detail-item-value" style="font-family:monospace">/api/v1/user/*</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-item-label">Host</span>
-                <span class="detail-item-value text-gray">--</span>
               </div>
               <div class="detail-item">
                 <span class="detail-item-label">优先级</span>
@@ -1171,11 +1156,43 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
           </div>
         </div>
 
+        <!-- 匹配规则 -->
+        <div class="detail-card">
+          <div class="detail-card-hd" style="display:flex;align-items:center;gap:12px">
+            <span>匹配规则</span>
+            <span class="link" style="font-size:13px;font-weight:400" onclick="showPage('page-route-create');initWizard()">编辑</span>
+          </div>
+          <div class="detail-card-bd">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-item-label">域名</span>
+                <span class="detail-item-value text-gray">--</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">HTTP 方法</span>
+                <span class="detail-item-value">GET</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">路径</span>
+                <span class="detail-item-value" style="font-family:monospace">/api/v1/user/*</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">协议改写</span>
+                <span class="detail-item-value text-gray">--</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-item-label">HTTP 方法改写</span>
+                <span class="detail-item-value text-gray">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 后端服务器组 -->
         <div class="detail-card">
-          <div class="detail-card-hd" style="display:flex;align-items:center;justify-content:space-between">
+          <div class="detail-card-hd" style="display:flex;align-items:center;gap:12px">
             <span>后端服务器组</span>
-            <button class="btn" style="font-size:13px;padding:3px 10px" onclick="showPage('page-route-create');initWizard()">编辑</button>
+            <span class="link" style="font-size:13px;font-weight:400" onclick="showPage('page-route-create');initWizard()">编辑</span>
           </div>
           <div class="detail-card-bd">
             <div class="detail-grid">
@@ -1205,7 +1222,10 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 
         <!-- 插件配置 -->
         <div class="detail-card">
-          <div class="detail-card-hd">插件配置</div>
+          <div class="detail-card-hd" style="display:flex;align-items:center;gap:12px">
+            <span>插件配置</span>
+            <span class="link" style="font-size:13px;font-weight:400" onclick="showPage('page-route-create');initWizard()">编辑</span>
+          </div>
           <div class="detail-card-bd" style="padding:0">
             <!-- 插件 1 -->
             <div style="border-bottom:1px solid #f0f0f0">
