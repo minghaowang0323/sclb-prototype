@@ -353,6 +353,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>王铭浩</td>
               <td><div class="ops">
                 <span class="op" onclick="showPage('page-detail')">查看</span>
+                <span class="op gray" title="有未发布草稿，请编辑草稿行">编辑</span>
                 <span class="op" onclick="showTransfer('ip-rate-limit')">转移</span>
                 <span class="op gray" title="已是最新发布版本">发布</span>
                 <span class="op gray" title="已绑定路由，不可删除">删除</span>
@@ -570,7 +571,6 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 </div>
                   </div>
                 </div>
-                <div class="f-hint" style="margin-top:6px">函数签名随执行阶段自动更新，不可修改。在此基础上填写函数体逻辑。</div>
               </div>
             </div>
           </div>
@@ -585,8 +585,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                 <div style="display:grid;grid-template-columns:1fr 120px 120px 80px 1fr 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
                   <span>参数名</span><span>类型</span><span>默认值</span><span>必填</span><span>描述</span><span></span>
                 </div>
-                <div id="param-list">
-                </div>
+                <div id="param-list"></div>
                 <button class="btn" style="margin-top:8px;font-size:13px" onclick="addParam()">+ 添加参数</button>
                 <div class="f-hint">路由绑定此插件时，用户需要填写这些参数的值</div>
               </div>
@@ -654,7 +653,6 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 </div>
                   </div>
                 </div>
-                <div class="f-hint" style="margin-top:6px">函数签名随执行阶段自动更新，不可修改。在此基础上填写函数体逻辑。</div>
               </div>
             </div>
           </div>
@@ -1487,6 +1485,7 @@ function renderWizard() {
     const sc = document.getElementById('sc' + i);
     const sl = document.getElementById('sl' + i);
     const content = document.getElementById('wstep' + i);
+    if (!sc || !sl || !content) continue;
     if (i < currentStep) {
       sc.className = 'step-circle done'; sc.textContent = '✓';
       sl.className = 'step-label done';
@@ -1499,12 +1498,16 @@ function renderWizard() {
     }
     content.className = 'wizard-step-content' + (i === currentStep ? ' active' : '');
     if (i < TOTAL_STEPS) {
-      document.getElementById('line' + i).className = 'step-line' + (i < currentStep ? ' done' : '');
+      const line = document.getElementById('line' + i);
+      if (line) line.className = 'step-line' + (i < currentStep ? ' done' : '');
     }
   }
-  document.getElementById('btn-prev').style.display = currentStep > 1 ? 'inline-flex' : 'none';
-  document.getElementById('btn-next').style.display = currentStep < TOTAL_STEPS ? 'inline-flex' : 'none';
-  document.getElementById('btn-submit').style.display = currentStep === TOTAL_STEPS ? 'inline-flex' : 'none';
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const btnSubmit = document.getElementById('btn-submit');
+  if (btnPrev) btnPrev.style.display = currentStep > 1 ? 'inline-flex' : 'none';
+  if (btnNext) btnNext.style.display = currentStep < TOTAL_STEPS ? 'inline-flex' : 'none';
+  if (btnSubmit) btnSubmit.style.display = currentStep === TOTAL_STEPS ? 'inline-flex' : 'none';
 }
 
 function wizardNext() {
