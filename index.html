@@ -131,6 +131,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 .code-body { display: flex; font-family: "Consolas","Monaco",monospace; font-size: 13px; line-height: 22px; min-height: 280px; background: #1e1e1e; }
 .code-nums { background: #252525; color: #858585; padding: 10px 10px; text-align: right; user-select: none; min-width: 42px; border-right: 1px solid #3d3d3d; }
 .code-area { flex: 1; padding: 10px 14px; color: #d4d4d4; overflow: auto; white-space: pre; outline: none; }
+.code-lock-line { padding: 1px 14px; color: #858585; pointer-events: none; user-select: none; white-space: pre; }
 .kw{color:#569cd6} .fn{color:#dcdcaa} .str{color:#ce9178} .cm{color:#6a9955} .var{color:#9cdcfe} .num{color:#b5cea8} .type{color:#4ec9b0}
 
 /* 配置参数表 */
@@ -549,7 +550,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-label"><span class="req">*</span>执行阶段：</div>
               <div class="f-ctrl">
                 <div class="sel-wrap" style="width:380px">
-                  <select class="f-select">
+                  <select class="f-select" id="create-phase-sel" onchange="syncPhaseLabel('create')">
                     <option>rewrite — 路由匹配后、转发前，改写请求</option>
                     <option>access — 访问控制、鉴权、限流</option>
                     <option>before_proxy — 转发上游前，最后一次修改请求</option>
@@ -578,27 +579,11 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-label">代码：</div>
               <div class="f-ctrl">
                 <div class="code-editor">
-                  <div class="code-body">
-                    <div class="code-nums"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div></div>
-                    <div class="code-area" contenteditable="true" spellcheck="false"><span class="cm">-- 插件名称：ip-rate-limit</span>
-<span class="cm">-- 执行阶段：access</span>
-
-<span class="kw">local</span> <span class="var">core</span>       = <span class="fn">require</span>(<span class="str">"apisix.core"</span>)
-<span class="kw">local</span> <span class="var">limit_req</span>  = <span class="fn">require</span>(<span class="str">"resty.limit.req"</span>)
-
-<span class="kw">local</span> <span class="var">_M</span> = {}
-
-<span class="kw">function</span> <span class="var">_M</span>.<span class="fn">access</span>(<span class="var">conf</span>, <span class="var">ctx</span>)
-    <span class="kw">local</span> <span class="var">key</span> = <span class="var">ctx</span>.<span class="var">var</span>.<span class="var">remote_addr</span>
-    <span class="cm">-- 令牌桶：rate 个/秒，burst 为允许的突发量</span>
-    <span class="kw">local</span> <span class="var">ok</span>, <span class="var">err</span> = <span class="fn">limit_req</span>(<span class="var">key</span>, <span class="var">conf</span>.<span class="var">rate</span>, <span class="var">conf</span>.<span class="var">burst</span>)
-    <span class="kw">if not</span> <span class="var">ok</span> <span class="kw">then</span>
-        <span class="kw">return</span> <span class="var">core</span>.<span class="fn">response</span>.<span class="fn">exit</span>(<span class="num">429</span>, { <span class="var">message</span> = <span class="str">"Too Many Requests"</span> })
-    <span class="kw">end</span>
-<span class="kw">end</span>
-
-<span class="kw">return</span> <span class="var">_M</span>
-</div>
+                  <div class="code-body" style="flex-direction:column;min-height:180px">
+                    <div class="code-lock-line"><span class="kw">function</span> <span class="var">_M</span>.<span class="fn" id="create-phase-label">rewrite</span>(<span class="var">conf</span>, <span class="var">ctx</span>)</div>
+                    <div class="code-area" contenteditable="true" spellcheck="false" style="min-height:80px;padding-top:0;padding-bottom:0"></div>
+                    <div class="code-lock-line"><span class="kw">end</span></div>
+                    <div class="code-lock-line"><span class="kw">return</span> <span class="var">_M</span></div>
                   </div>
                 </div>
               </div>
@@ -656,7 +641,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-label"><span class="req">*</span>执行阶段：</div>
               <div class="f-ctrl">
                 <div class="sel-wrap" style="width:380px">
-                  <select class="f-select">
+                  <select class="f-select" id="edit-phase-sel" onchange="syncPhaseLabel('edit')">
                     <option selected>access — 访问控制、鉴权、限流</option>
                     <option>rewrite — 路由匹配后、转发前，改写请求</option>
                     <option>before_proxy — 转发上游前，最后一次修改请求</option>
@@ -683,21 +668,15 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-label">代码：</div>
               <div class="f-ctrl">
                 <div class="code-editor">
-                  <div class="code-body">
-                    <div class="code-nums"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div></div>
-                    <div class="code-area" contenteditable="true" spellcheck="false"><span class="kw">local</span> <span class="var">core</span>      = <span class="fn">require</span>(<span class="str">"apisix.core"</span>)
-<span class="kw">local</span> <span class="var">limit_req</span> = <span class="fn">require</span>(<span class="str">"resty.limit.req"</span>)
-<span class="kw">local</span> <span class="var">_M</span> = {}
-
-<span class="kw">function</span> <span class="var">_M</span>.<span class="fn">access</span>(<span class="var">conf</span>, <span class="var">ctx</span>)
-    <span class="kw">local</span> <span class="var">key</span> = <span class="var">ctx</span>.<span class="var">var</span>.<span class="var">remote_addr</span>
+                  <div class="code-body" style="flex-direction:column;min-height:180px">
+                    <div class="code-lock-line"><span class="kw">function</span> <span class="var">_M</span>.<span class="fn" id="edit-phase-label">access</span>(<span class="var">conf</span>, <span class="var">ctx</span>)</div>
+                    <div class="code-area" contenteditable="true" spellcheck="false" style="min-height:80px;padding-top:0;padding-bottom:0">    <span class="kw">local</span> <span class="var">key</span> = <span class="var">ctx</span>.<span class="var">var</span>.<span class="var">remote_addr</span>
     <span class="kw">local</span> <span class="var">ok</span>, <span class="var">err</span> = <span class="fn">limit_req</span>(<span class="var">key</span>, <span class="var">conf</span>.<span class="var">rate</span>, <span class="var">conf</span>.<span class="var">burst</span>)
     <span class="kw">if not</span> <span class="var">ok</span> <span class="kw">then</span>
         <span class="kw">return</span> <span class="var">core</span>.<span class="fn">response</span>.<span class="fn">exit</span>(<span class="num">429</span>, { <span class="var">message</span> = <span class="str">"Too Many Requests"</span> })
-    <span class="kw">end</span>
-<span class="kw">end</span>
-<span class="kw">return</span> <span class="var">_M</span>
-</div>
+    <span class="kw">end</span></div>
+                    <div class="code-lock-line"><span class="kw">end</span></div>
+                    <div class="code-lock-line"><span class="kw">return</span> <span class="var">_M</span></div>
                   </div>
                 </div>
               </div>
@@ -1496,6 +1475,13 @@ function toggleGroup(id) {
 
 // 添加配置参数行
 function addParam() { appendParamRow(document.getElementById('param-list')); }
+
+function syncPhaseLabel(form) {
+  var sel = document.getElementById(form + '-phase-sel');
+  var lbl = document.getElementById(form + '-phase-label');
+  if (!sel || !lbl) return;
+  lbl.textContent = sel.value.split(' ')[0];
+}
 function addParamEdit() { appendParamRow(document.getElementById('param-list-edit')); }
 function appendParamRow(list) {
   const div = document.createElement('div');
