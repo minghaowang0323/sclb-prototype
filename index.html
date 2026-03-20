@@ -1573,7 +1573,7 @@ function confirmPick() {
           执行顺序：<input type="number" class="f-input order-input" value="${nextOrder}" min="1"
             style="width:64px;height:26px;font-size:12px;padding:0 6px" onchange="checkOrderConflict(this)" />
           <span class="text-gray" style="font-size:11px">（同阶段内生效，越大越先执行）</span>
-          <span class="order-warn" style="color:#ff4d4f;font-size:12px;display:none">执行顺序与其他插件重复</span>
+          <span class="order-warn" style="color:#ff4d4f;font-size:12px;display:none">同阶段内的插件执行顺序不能重复</span>
         </span>
       </div>
       <div style="display:flex;gap:12px">
