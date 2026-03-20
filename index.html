@@ -1519,12 +1519,12 @@ function wizardPrev() {
 // 插件选择器
 let selPlugin = null;
 const pluginParams = {
-  'ip-rate-limit':   [['rate','integer',true,'每秒最大请求数'],['burst','integer',false,'允许的突发请求量']],
-  'jwt-auth':        [['secret_header','string',true,'JWT Token 所在的请求头名称'],['expire_check','boolean',false,'是否校验 Token 过期时间']],
-  'request-rewrite': [['add_headers','string',false,'注入的请求头，格式 key:value'],['strip_prefix','string',false,'需要剥离的路径前缀']],
-  'ip-blacklist':    [['blacklist','string',true,'黑名单 IP 列表，逗号分隔']],
-  'cors-handler':    [['allow_origins','string',true,'允许的来源域名，* 表示全部'],['allow_methods','string',false,'允许的 HTTP 方法，逗号分隔']],
-  'access-logger':   [['kafka_brokers','string',true,'Kafka Broker 地址，逗号分隔'],['topic','string',true,'投递日志的 Kafka Topic']],
+  'ip-rate-limit':   [['rate','integer',true,'每秒最大请求数',''],['burst','integer',false,'允许的突发请求量','0']],
+  'jwt-auth':        [['secret_header','string',true,'JWT Token 所在的请求头名称',''],['expire_check','boolean',false,'是否校验 Token 过期时间','false']],
+  'request-rewrite': [['add_headers','string',false,'注入的请求头，格式 key:value',''],['strip_prefix','string',false,'需要剥离的路径前缀','']],
+  'ip-blacklist':    [['blacklist','string',true,'黑名单 IP 列表，逗号分隔','']],
+  'cors-handler':    [['allow_origins','string',true,'允许的来源域名，* 表示全部','*'],['allow_methods','string',false,'允许的 HTTP 方法，逗号分隔','GET,POST']],
+  'access-logger':   [['kafka_brokers','string',true,'Kafka Broker 地址，逗号分隔',''],['topic','string',true,'投递日志的 Kafka Topic','']],
 };
 
 function showPicker() {
@@ -1550,8 +1550,8 @@ function confirmPick() {
   const container = document.getElementById('bound-list');
   const card = document.createElement('div');
   card.className = 'bound-card';
-  const params = (pluginParams[selPlugin.name] || []).map(([k, t, r, d]) =>
-    `<tr><td>${r ? '<span style="color:#ff4d4f">*</span>' : ''}${k}</td><td><span class="tag-blue" style="font-size:11px">${t}</span></td><td class="text-gray">${d || '--'}</td><td><input class="f-input" placeholder="${r ? '必填' : '可选'}" style="width:160px" /></td></tr>`
+  const params = (pluginParams[selPlugin.name] || []).map(([k, t, r, d, def]) =>
+    `<tr><td>${r ? '<span style="color:#ff4d4f">*</span>' : ''}${k}</td><td><span class="tag-blue" style="font-size:11px">${t}</span></td><td class="text-gray">${d || '--'}</td><td><input class="f-input" placeholder="${r ? '必填' : '可选'}" value="${def || ''}" style="width:160px" /></td></tr>`
   ).join('');
   card.innerHTML = `
     <div class="bound-card-hd">
