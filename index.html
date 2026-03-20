@@ -141,7 +141,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 .param-table .f-select { height: 28px; }
 
 /* 参数行 */
-.param-row { display: grid; grid-template-columns: 1fr 1fr 120px 120px 70px 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+.param-row { display: grid; grid-template-columns: 1fr 120px 120px 80px 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
 .param-del { border: none; background: none; color: #ff4d4f; cursor: pointer; font-size: 18px; line-height: 1; }
 
 /* 表单底部按钮 */
@@ -353,7 +353,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>王铭浩</td>
               <td><div class="ops">
                 <span class="op" onclick="showPage('page-detail')">查看</span>
-                <span class="op gray" title="有未发布草稿，请编辑草稿行">编辑</span>
+                <span class="op" onclick="showPage('page-edit')">编辑</span>
                 <span class="op" onclick="showTransfer('ip-rate-limit')">转移</span>
                 <span class="op gray" title="已是最新发布版本">发布</span>
                 <span class="op gray" title="已绑定路由，不可删除">删除</span>
@@ -536,7 +536,6 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-label"><span class="req">*</span>插件名称：</div>
               <div class="f-ctrl">
                 <input class="f-input" placeholder="请输入插件名称" style="max-width:480px" />
-                <div class="f-hint">仅支持小写字母、数字、连字符（-），不能以连字符开头或结尾，长度 2~64 字符，创建后不可修改</div>
               </div>
             </div>
             <div class="f-row">
@@ -549,14 +548,16 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-label"><span class="req">*</span>执行阶段：</div>
               <div class="f-ctrl">
                 <div class="sel-wrap" style="width:380px">
-                  <select class="f-select" onchange="updateStageInCode(this,'code-stage-new')">
-                    <option value="rewrite">rewrite — 路由匹配后、转发前，改写请求</option>
-                    <option value="access">access — 访问控制、鉴权、限流</option>
-                    <option value="before_proxy">before_proxy — 转发上游前，最后一次修改请求</option>
-                    <option value="header_filter">header_filter — 上游响应头返回时</option>
-                    <option value="body_filter">body_filter — 上游响应体返回时</option>
-                    <option value="log">log — 请求结束后异步执行</option>
+                  <select class="f-select">
+                    <option>rewrite — 路由匹配后、转发前，改写请求</option>
+                    <option>access — 访问控制、鉴权、限流</option>
+                    <option>before_proxy — 转发上游前，最后一次修改请求</option>
+                    <option>header_filter — 上游响应头返回时</option>
+                    <option>body_filter — 上游响应体返回时</option>
+                    <option>log — 请求结束后异步执行</option>
                   </select>
+                </div>
+                <div class="f-hint">决定插件在请求生命周期中的执行位置</div>
               </div>
             </div>
           </div>
@@ -570,8 +571,25 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-ctrl">
                 <div class="code-editor">
                   <div class="code-body">
-                    <div class="code-nums"><div>1</div></div>
-                    <div class="code-area" spellcheck="false"><span class="kw">function</span> <span class="var">_M</span>.<span class="fn" id="code-stage-new">rewrite</span>(<span class="var">conf</span>, <span class="var">ctx</span>)
+                    <div class="code-nums"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div></div>
+                    <div class="code-area" contenteditable="true" spellcheck="false"><span class="cm">-- 插件名称：ip-rate-limit</span>
+<span class="cm">-- 执行阶段：access</span>
+
+<span class="kw">local</span> <span class="var">core</span>       = <span class="fn">require</span>(<span class="str">"apisix.core"</span>)
+<span class="kw">local</span> <span class="var">limit_req</span>  = <span class="fn">require</span>(<span class="str">"resty.limit.req"</span>)
+
+<span class="kw">local</span> <span class="var">_M</span> = {}
+
+<span class="kw">function</span> <span class="var">_M</span>.<span class="fn">access</span>(<span class="var">conf</span>, <span class="var">ctx</span>)
+    <span class="kw">local</span> <span class="var">key</span> = <span class="var">ctx</span>.<span class="var">var</span>.<span class="var">remote_addr</span>
+    <span class="cm">-- 令牌桶：rate 个/秒，burst 为允许的突发量</span>
+    <span class="kw">local</span> <span class="var">ok</span>, <span class="var">err</span> = <span class="fn">limit_req</span>(<span class="var">key</span>, <span class="var">conf</span>.<span class="var">rate</span>, <span class="var">conf</span>.<span class="var">burst</span>)
+    <span class="kw">if not</span> <span class="var">ok</span> <span class="kw">then</span>
+        <span class="kw">return</span> <span class="var">core</span>.<span class="fn">response</span>.<span class="fn">exit</span>(<span class="num">429</span>, { <span class="var">message</span> = <span class="str">"Too Many Requests"</span> })
+    <span class="kw">end</span>
+<span class="kw">end</span>
+
+<span class="kw">return</span> <span class="var">_M</span>
 </div>
                   </div>
                 </div>
@@ -586,10 +604,11 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
             <div class="f-row">
               <div class="f-label">参数定义：</div>
               <div class="f-ctrl">
-                <div style="display:grid;grid-template-columns:1fr 1fr 120px 120px 70px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
-                  <span>参数名</span><span>描述</span><span>类型</span><span>默认值</span><span>必填</span><span></span>
+                <div style="display:grid;grid-template-columns:1fr 120px 120px 80px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
+                  <span>参数名</span><span>类型</span><span>默认值</span><span>必填</span><span></span>
                 </div>
-                <div id="param-list"></div>
+                <div id="param-list">
+                </div>
                 <button class="btn" style="margin-top:8px;font-size:13px" onclick="addParam()">+ 添加参数</button>
                 <div class="f-hint">路由绑定此插件时，用户需要填写这些参数的值</div>
               </div>
@@ -617,8 +636,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
             <div class="f-row">
               <div class="f-label"><span class="req">*</span>插件名称：</div>
               <div class="f-ctrl">
-                <input class="f-input" value="ip-rate-limit" style="max-width:480px;background:#fafafa;color:#8c8c8c" disabled />
-                <div class="f-hint">插件名称创建后不可修改</div>
+                <input class="f-input" value="ip-rate-limit" style="max-width:480px" />
               </div>
             </div>
             <div class="f-row">
@@ -631,13 +649,13 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-label"><span class="req">*</span>执行阶段：</div>
               <div class="f-ctrl">
                 <div class="sel-wrap" style="width:380px">
-                  <select class="f-select" onchange="updateStageInCode(this,'code-stage-edit')">
-                    <option value="access" selected>access — 访问控制、鉴权、限流</option>
-                    <option value="rewrite">rewrite — 路由匹配后、转发前，改写请求</option>
-                    <option value="before_proxy">before_proxy — 转发上游前，最后一次修改请求</option>
-                    <option value="header_filter">header_filter — 上游响应头返回时</option>
-                    <option value="body_filter">body_filter — 上游响应体返回时</option>
-                    <option value="log">log — 请求结束后异步执行</option>
+                  <select class="f-select">
+                    <option selected>access — 访问控制、鉴权、限流</option>
+                    <option>rewrite — 路由匹配后、转发前，改写请求</option>
+                    <option>before_proxy — 转发上游前，最后一次修改请求</option>
+                    <option>header_filter — 上游响应头返回时</option>
+                    <option>body_filter — 上游响应体返回时</option>
+                    <option>log — 请求结束后异步执行</option>
                   </select>
                 </div>
                 <div class="f-hint">修改执行阶段后请确认 Lua 代码与新阶段兼容</div>
@@ -652,8 +670,19 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <div class="f-ctrl">
                 <div class="code-editor">
                   <div class="code-body">
-                    <div class="code-nums"><div>1</div></div>
-                    <div class="code-area" spellcheck="false"><span class="kw">function</span> <span class="var">_M</span>.<span class="fn" id="code-stage-edit">access</span>(<span class="var">conf</span>, <span class="var">ctx</span>)
+                    <div class="code-nums"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div></div>
+                    <div class="code-area" contenteditable="true" spellcheck="false"><span class="kw">local</span> <span class="var">core</span>      = <span class="fn">require</span>(<span class="str">"apisix.core"</span>)
+<span class="kw">local</span> <span class="var">limit_req</span> = <span class="fn">require</span>(<span class="str">"resty.limit.req"</span>)
+<span class="kw">local</span> <span class="var">_M</span> = {}
+
+<span class="kw">function</span> <span class="var">_M</span>.<span class="fn">access</span>(<span class="var">conf</span>, <span class="var">ctx</span>)
+    <span class="kw">local</span> <span class="var">key</span> = <span class="var">ctx</span>.<span class="var">var</span>.<span class="var">remote_addr</span>
+    <span class="kw">local</span> <span class="var">ok</span>, <span class="var">err</span> = <span class="fn">limit_req</span>(<span class="var">key</span>, <span class="var">conf</span>.<span class="var">rate</span>, <span class="var">conf</span>.<span class="var">burst</span>)
+    <span class="kw">if not</span> <span class="var">ok</span> <span class="kw">then</span>
+        <span class="kw">return</span> <span class="var">core</span>.<span class="fn">response</span>.<span class="fn">exit</span>(<span class="num">429</span>, { <span class="var">message</span> = <span class="str">"Too Many Requests"</span> })
+    <span class="kw">end</span>
+<span class="kw">end</span>
+<span class="kw">return</span> <span class="var">_M</span>
 </div>
                   </div>
                 </div>
@@ -666,13 +695,12 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
             <div class="f-row">
               <div class="f-label">参数定义：</div>
               <div class="f-ctrl">
-                <div style="display:grid;grid-template-columns:1fr 1fr 120px 120px 70px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
-                  <span>参数名</span><span>描述</span><span>类型</span><span>默认值</span><span>必填</span><span></span>
+                <div style="display:grid;grid-template-columns:1fr 120px 120px 80px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
+                  <span>参数名</span><span>类型</span><span>默认值</span><span>必填</span><span></span>
                 </div>
                 <div id="param-list-edit">
                   <div class="param-row">
                     <input class="f-input" value="rate" />
-                    <input class="f-input" value="每秒允许的请求数" />
                     <div class="sel-wrap"><select class="f-select"><option>string</option><option selected>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
                     <input class="f-input" placeholder="可选" />
                     <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" checked style="accent-color:#1890ff" /> 必填</div>
@@ -680,9 +708,8 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                   </div>
                   <div class="param-row">
                     <input class="f-input" value="burst" />
-                    <input class="f-input" value="允许的突发请求数" />
                     <div class="sel-wrap"><select class="f-select"><option>string</option><option selected>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
-                    <input class="f-input" value="0" />
+                    <input class="f-input" placeholder="可选" />
                     <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" style="accent-color:#1890ff" /> 必填</div>
                     <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
                   </div>
@@ -902,7 +929,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
           <div class="step-line" id="line1"></div>
           <div class="step">
             <div class="step-circle" id="sc2">2</div>
-            <span class="step-label" id="sl2">后端服务器组</span>
+            <span class="step-label" id="sl2">服务器组</span>
           </div>
           <div class="step-line" id="line2"></div>
           <div class="step">
@@ -1057,7 +1084,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
         <div style="display:flex;gap:8px">
           <button class="btn" onclick="showPage('page-route')">取消</button>
           <button class="btn btn-primary" id="btn-next" onclick="wizardNext()">下一步</button>
-          <button class="btn btn-primary" id="btn-submit" onclick="showRoutePublishTip()" style="display:none">完 成</button>
+          <button class="btn btn-primary" id="btn-submit" onclick="showPage('page-route')" style="display:none">完 成</button>
         </div>
       </div>
     </div>
@@ -1310,26 +1337,6 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
   </div>
 </div>
 
-<!-- Modal: 路由发布提示 -->
-<div class="mask" id="route-publish-modal">
-  <div class="modal confirm-modal" style="width:480px">
-    <div class="modal-hd">
-      <span class="modal-title"><span style="color:#faad14;margin-right:6px">ℹ</span>发布路由</span>
-      <button class="modal-close" onclick="document.getElementById('route-publish-modal').classList.remove('open')">✕</button>
-    </div>
-    <div class="modal-bd" style="padding:20px 24px">
-      <div style="background:#fffbe6;border:1px solid #ffe58f;border-radius:2px;padding:12px 16px;font-size:13px;line-height:2;color:#614700">
-        <div>路由绑定的插件仅支持发布到<strong>平台创建并管理的实例</strong>。</div>
-        <div>如需发布到已导出的外部实例，请参考 <span class="link" style="font-size:13px">操作文档</span> 手动同步配置。</div>
-      </div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn" onclick="document.getElementById('route-publish-modal').classList.remove('open')">取消</button>
-      <button class="btn btn-primary" onclick="document.getElementById('route-publish-modal').classList.remove('open');showPage('page-route')">确认发布</button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal: 转移插件 -->
 <div class="mask" id="transfer-modal">
   <div class="modal confirm-modal" style="width:400px">
@@ -1446,7 +1453,6 @@ function appendParamRow(list) {
   div.className = 'param-row';
   div.innerHTML = `
     <input class="f-input" placeholder="参数名" />
-    <input class="f-input" placeholder="参数描述" />
     <div class="sel-wrap"><select class="f-select"><option>string</option><option>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
     <input class="f-input" placeholder="可选" />
     <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" style="accent-color:#1890ff" /> 必填</div>
@@ -1466,15 +1472,6 @@ function showDel(name) {
   document.getElementById('del-modal').classList.add('open');
 }
 
-function showRoutePublishTip() {
-  document.getElementById('route-publish-modal').classList.add('open');
-}
-
-function updateStageInCode(sel, targetId) {
-  const el = document.getElementById(targetId);
-  if (el) el.textContent = sel.value;
-}
-
 // ===== 步骤向导 =====
 let currentStep = 1;
 const TOTAL_STEPS = 3;
@@ -1489,7 +1486,6 @@ function renderWizard() {
     const sc = document.getElementById('sc' + i);
     const sl = document.getElementById('sl' + i);
     const content = document.getElementById('wstep' + i);
-    if (!sc || !sl || !content) continue;
     if (i < currentStep) {
       sc.className = 'step-circle done'; sc.textContent = '✓';
       sl.className = 'step-label done';
@@ -1502,16 +1498,12 @@ function renderWizard() {
     }
     content.className = 'wizard-step-content' + (i === currentStep ? ' active' : '');
     if (i < TOTAL_STEPS) {
-      const line = document.getElementById('line' + i);
-      if (line) line.className = 'step-line' + (i < currentStep ? ' done' : '');
+      document.getElementById('line' + i).className = 'step-line' + (i < currentStep ? ' done' : '');
     }
   }
-  const btnPrev = document.getElementById('btn-prev');
-  const btnNext = document.getElementById('btn-next');
-  const btnSubmit = document.getElementById('btn-submit');
-  if (btnPrev) btnPrev.style.display = currentStep > 1 ? 'inline-flex' : 'none';
-  if (btnNext) btnNext.style.display = currentStep < TOTAL_STEPS ? 'inline-flex' : 'none';
-  if (btnSubmit) btnSubmit.style.display = currentStep === TOTAL_STEPS ? 'inline-flex' : 'none';
+  document.getElementById('btn-prev').style.display = currentStep > 1 ? 'inline-flex' : 'none';
+  document.getElementById('btn-next').style.display = currentStep < TOTAL_STEPS ? 'inline-flex' : 'none';
+  document.getElementById('btn-submit').style.display = currentStep === TOTAL_STEPS ? 'inline-flex' : 'none';
 }
 
 function wizardNext() {
@@ -1522,15 +1514,14 @@ function wizardPrev() {
 }
 
 // 插件选择器
-// 格式: [参数名, 类型, 必填, 默认值, 描述]
 let selPlugin = null;
 const pluginParams = {
-  'ip-rate-limit':   [['rate','integer',true,'','每秒允许的请求数'],['burst','integer',false,'0','允许的突发请求数']],
-  'jwt-auth':        [['secret_header','string',true,'Authorization','携带 JWT Token 的请求头名称'],['expire_check','boolean',false,'true','是否校验 Token 过期时间']],
-  'request-rewrite': [['add_headers','string',false,'','需要注入的请求头，格式 key:value'],['strip_prefix','string',false,'','转发前剥离的路径前缀']],
-  'ip-blacklist':    [['blacklist','string',true,'','IP 黑名单，多个用逗号分隔']],
-  'cors-handler':    [['allow_origins','string',true,'*','允许的来源域名，* 表示全部'],['allow_methods','string',false,'GET,POST','允许的 HTTP 方法']],
-  'access-logger':   [['kafka_brokers','string',true,'','Kafka broker 地址，多个用逗号分隔'],['topic','string',true,'','Kafka topic 名称']],
+  'ip-rate-limit':   [['rate','integer',true],['burst','integer',false]],
+  'jwt-auth':        [['secret_header','string',true],['expire_check','boolean',false]],
+  'request-rewrite': [['add_headers','string',false],['strip_prefix','string',false]],
+  'ip-blacklist':    [['blacklist','string',true]],
+  'cors-handler':    [['allow_origins','string',true],['allow_methods','string',false]],
+  'access-logger':   [['kafka_brokers','string',true],['topic','string',true]],
 };
 
 function showPicker() {
@@ -1556,13 +1547,8 @@ function confirmPick() {
   const container = document.getElementById('bound-list');
   const card = document.createElement('div');
   card.className = 'bound-card';
-  const params = (pluginParams[selPlugin.name] || []).map(([k, t, r, def, desc]) =>
-    `<tr>
-      <td>${k}${r ? ' <span style="color:#ff4d4f;font-size:11px">必填</span>' : ''}</td>
-      <td><span class="tag-blue" style="font-size:11px">${t}</span></td>
-      <td><input class="f-input" value="${def || ''}" placeholder="${r ? '必填' : '可选'}" style="width:180px" /></td>
-      <td class="text-gray" style="font-size:12px">${desc || ''}</td>
-    </tr>`
+  const params = (pluginParams[selPlugin.name] || []).map(([k, t, r]) =>
+    `<tr><td>${k}${r ? ' <span style="color:#ff4d4f;font-size:11px">必填</span>' : ''}</td><td><input class="f-input" placeholder="请输入" style="width:200px" /></td></tr>`
   ).join('');
   card.innerHTML = `
     <div class="bound-card-hd">
@@ -1582,7 +1568,7 @@ function confirmPick() {
       </div>
     </div>
     <div class="bound-card-bd">
-      ${params ? `<table class="param-table"><thead><tr><th style="width:160px">参数</th><th style="width:80px">类型</th><th style="width:200px">值</th><th>描述</th></tr></thead><tbody>${params}</tbody></table>` : '<div class="text-gray text-sm">该插件无需配置参数</div>'}
+      ${params ? `<table class="param-table"><thead><tr><th style="width:200px">参数</th><th>值</th></tr></thead><tbody>${params}</tbody></table>` : '<div class="text-gray text-sm">该插件无需配置参数</div>'}
     </div>
   `;
   container.appendChild(card);
