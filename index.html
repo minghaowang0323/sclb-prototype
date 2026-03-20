@@ -356,10 +356,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                 <span class="op" onclick="showPage('page-edit')">编辑</span>
                 <span class="op" onclick="showTransfer('ip-rate-limit')">转移</span>
                 <span class="op gray" title="已是最新发布版本">发布</span>
-                <span class="op gray" title="已绑定路由，不可删除">删除</span>
-              </div></td>
-            </tr>
-            <!-- ip-rate-limit 草稿子行（默认折叠） -->
+                <span class="op danger" onclick="showDel('ip-rate-limit')">删除</span>（默认折叠） -->
             <tr class="draft-row" id="draft-ipl" style="display:none">
               <td style="padding-left:38px">
                 <span class="tag-draft" style="font-size:11px;margin-right:6px">草稿</span>ip-rate-limit
@@ -395,11 +392,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                 <span class="op" onclick="showPage('page-edit')">编辑</span>
                 <span class="op" onclick="showTransfer('jwt-auth')">转移</span>
                 <span class="op gray" title="已是最新发布版本">发布</span>
-                <span class="op gray" title="已绑定路由，不可删除">删除</span>
-              </div></td>
-            </tr>
-
-            <!-- request-rewrite：已发布，无草稿 -->
+                <span class="op danger" onclick="showDel('jwt-auth')">删除</span>：已发布，无草稿 -->
             <tr>
               <td>
                 <div style="display:flex;align-items:center;gap:6px">
@@ -461,11 +454,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                 <span class="op" onclick="showPage('page-edit')">编辑</span>
                 <span class="op" onclick="showTransfer('ip-blacklist')">转移</span>
                 <span class="op gray" title="已是最新发布版本">发布</span>
-                <span class="op gray" title="已绑定路由，不可删除">删除</span>
-              </div></td>
-            </tr>
-
-            <!-- cors-handler：已发布，无草稿 -->
+                <span class="op danger" onclick="showDel('ip-blacklist')">删除</span>：已发布，无草稿 -->
             <tr>
               <td>
                 <div style="display:flex;align-items:center;gap:6px">
