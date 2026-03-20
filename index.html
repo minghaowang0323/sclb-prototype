@@ -561,6 +561,13 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                 <div class="f-hint">决定插件在请求生命周期中的执行位置</div>
               </div>
             </div>
+            <div class="f-row">
+              <div class="f-label"><span class="req">*</span>执行顺序：</div>
+              <div class="f-ctrl">
+                <input class="f-input" type="number" min="1" placeholder="如：100" style="width:160px" />
+                <div class="f-hint">同阶段内越大越先执行，绑定路由时作为默认值，可覆盖</div>
+              </div>
+            </div>
           </div>
 
           <hr class="divider" />
@@ -659,6 +666,13 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                   </select>
                 </div>
                 <div class="f-hint">修改执行阶段后请确认 Lua 代码与新阶段兼容</div>
+              </div>
+            </div>
+            <div class="f-row">
+              <div class="f-label"><span class="req">*</span>执行顺序：</div>
+              <div class="f-ctrl">
+                <input class="f-input" type="number" min="1" value="100" style="width:160px" />
+                <div class="f-hint">同阶段内越大越先执行，绑定路由时作为默认值，可覆盖</div>
               </div>
             </div>
           </div>
@@ -1523,6 +1537,7 @@ function wizardPrev() {
 
 // 插件选择器
 let selPlugin = null;
+// key: [params], 每个 param: [名, 类型, 必填, 描述, 默认值]
 const pluginParams = {
   'ip-rate-limit':   [['rate','integer',true,'每秒最大请求数',''],['burst','integer',false,'允许的突发请求量','0']],
   'jwt-auth':        [['secret_header','string',true,'JWT Token 所在的请求头名称',''],['expire_check','boolean',false,'是否校验 Token 过期时间','false']],
@@ -1530,6 +1545,16 @@ const pluginParams = {
   'ip-blacklist':    [['blacklist','string',true,'黑名单 IP 列表，逗号分隔','']],
   'cors-handler':    [['allow_origins','string',true,'允许的来源域名，* 表示全部','*'],['allow_methods','string',false,'允许的 HTTP 方法，逗号分隔','GET,POST']],
   'access-logger':   [['kafka_brokers','string',true,'Kafka Broker 地址，逗号分隔',''],['topic','string',true,'投递日志的 Kafka Topic','']],
+};
+// 插件默认执行顺序
+const pluginDefaultOrder = {
+  'ip-rate-limit':   100,
+  'jwt-auth':        90,
+  'request-rewrite': 80,
+  'response-cache':  50,
+  'ip-blacklist':    110,
+  'cors-handler':    60,
+  'access-logger':   10,
 };
 
 function showPicker() {
@@ -1554,9 +1579,11 @@ function confirmPick() {
   if (!selPlugin) { alert('请先选择插件'); return; }
   const container = document.getElementById('bound-list');
 
-  // 自动计算下一个执行顺序（最大值 + 10）
-  const existingOrders = Array.from(container.querySelectorAll('input[type=number]')).map(i => parseInt(i.value) || 0);
-  const nextOrder = existingOrders.length ? Math.max(...existingOrders) + 10 : 10;
+  // 使用插件定义的默认执行顺序，若已被占用则自动递增
+  const defaultOrder = pluginDefaultOrder[selPlugin.name] || 10;
+  const existingOrders = Array.from(container.querySelectorAll('input.order-input')).map(i => parseInt(i.value) || 0);
+  let nextOrder = defaultOrder;
+  while (existingOrders.includes(nextOrder)) nextOrder += 10;
 
   const card = document.createElement('div');
   card.className = 'bound-card';
