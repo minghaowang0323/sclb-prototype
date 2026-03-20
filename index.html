@@ -1232,11 +1232,11 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                 </div>
               </div>
               <div style="padding:16px 24px">
-                <table class="data-table" style="width:auto;min-width:400px">
-                  <thead><tr><th>参数</th><th>值</th></tr></thead>
+                <table class="data-table" style="width:auto;min-width:500px">
+                  <thead><tr><th>参数名</th><th>类型</th><th>必填</th><th>描述信息</th><th>值</th></tr></thead>
                   <tbody>
-                    <tr><td>rate</td><td>100</td></tr>
-                    <tr><td>burst</td><td>20</td></tr>
+                    <tr><td>rate</td><td><span class="tag-blue" style="font-size:11px">integer</span></td><td>是</td><td class="text-gray">每秒最大请求数</td><td>100</td></tr>
+                    <tr><td>burst</td><td><span class="tag-blue" style="font-size:11px">integer</span></td><td>否</td><td class="text-gray">允许的突发请求量</td><td>20</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1252,11 +1252,11 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                 </div>
               </div>
               <div style="padding:16px 24px">
-                <table class="data-table" style="width:auto;min-width:400px">
-                  <thead><tr><th>参数</th><th>值</th></tr></thead>
+                <table class="data-table" style="width:auto;min-width:500px">
+                  <thead><tr><th>参数名</th><th>类型</th><th>必填</th><th>描述信息</th><th>值</th></tr></thead>
                   <tbody>
-                    <tr><td>secret_header</td><td>Authorization</td></tr>
-                    <tr><td>expire_check</td><td>true</td></tr>
+                    <tr><td>secret_header</td><td><span class="tag-blue" style="font-size:11px">string</span></td><td>是</td><td class="text-gray">JWT Token 所在的请求头名称</td><td>Authorization</td></tr>
+                    <tr><td>expire_check</td><td><span class="tag-blue" style="font-size:11px">boolean</span></td><td>否</td><td class="text-gray">是否校验 Token 过期时间</td><td>true</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1522,12 +1522,12 @@ function wizardPrev() {
 // 插件选择器
 let selPlugin = null;
 const pluginParams = {
-  'ip-rate-limit':   [['rate','integer',true],['burst','integer',false]],
-  'jwt-auth':        [['secret_header','string',true],['expire_check','boolean',false]],
-  'request-rewrite': [['add_headers','string',false],['strip_prefix','string',false]],
-  'ip-blacklist':    [['blacklist','string',true]],
-  'cors-handler':    [['allow_origins','string',true],['allow_methods','string',false]],
-  'access-logger':   [['kafka_brokers','string',true],['topic','string',true]],
+  'ip-rate-limit':   [['rate','integer',true,'每秒最大请求数'],['burst','integer',false,'允许的突发请求量']],
+  'jwt-auth':        [['secret_header','string',true,'JWT Token 所在的请求头名称'],['expire_check','boolean',false,'是否校验 Token 过期时间']],
+  'request-rewrite': [['add_headers','string',false,'注入的请求头，格式 key:value'],['strip_prefix','string',false,'需要剥离的路径前缀']],
+  'ip-blacklist':    [['blacklist','string',true,'黑名单 IP 列表，逗号分隔']],
+  'cors-handler':    [['allow_origins','string',true,'允许的来源域名，* 表示全部'],['allow_methods','string',false,'允许的 HTTP 方法，逗号分隔']],
+  'access-logger':   [['kafka_brokers','string',true,'Kafka Broker 地址，逗号分隔'],['topic','string',true,'投递日志的 Kafka Topic']],
 };
 
 function showPicker() {
@@ -1553,8 +1553,8 @@ function confirmPick() {
   const container = document.getElementById('bound-list');
   const card = document.createElement('div');
   card.className = 'bound-card';
-  const params = (pluginParams[selPlugin.name] || []).map(([k, t, r]) =>
-    `<tr><td>${k}${r ? ' <span style="color:#ff4d4f;font-size:11px">必填</span>' : ''}</td><td><input class="f-input" placeholder="请输入" style="width:200px" /></td></tr>`
+  const params = (pluginParams[selPlugin.name] || []).map(([k, t, r, d]) =>
+    `<tr><td>${k}</td><td><span class="tag-blue" style="font-size:11px">${t}</span></td><td>${r ? '是' : '否'}</td><td class="text-gray">${d || '--'}</td><td><input class="f-input" placeholder="${r ? '必填' : '可选'}" style="width:160px" /></td></tr>`
   ).join('');
   card.innerHTML = `
     <div class="bound-card-hd">
@@ -1574,7 +1574,7 @@ function confirmPick() {
       </div>
     </div>
     <div class="bound-card-bd">
-      ${params ? `<table class="param-table"><thead><tr><th style="width:200px">参数</th><th>值</th></tr></thead><tbody>${params}</tbody></table>` : '<div class="text-gray text-sm">该插件无需配置参数</div>'}
+      ${params ? `<table class="param-table"><thead><tr><th>参数名</th><th>类型</th><th>必填</th><th>描述信息</th><th>值</th></tr></thead><tbody>${params}</tbody></table>` : '<div class="text-gray text-sm">该插件无需配置参数</div>'}
     </div>
   `;
   container.appendChild(card);
