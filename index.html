@@ -141,7 +141,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 .param-table .f-select { height: 28px; }
 
 /* 参数行 */
-.param-row { display: grid; grid-template-columns: 1fr 120px 120px 80px 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+.param-row { display: grid; grid-template-columns: 1fr 120px 1fr 120px 80px 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
 .param-del { border: none; background: none; color: #ff4d4f; cursor: pointer; font-size: 18px; line-height: 1; }
 
 /* 表单底部按钮 */
@@ -605,10 +605,9 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
             <div class="f-row">
               <div class="f-label">参数定义：</div>
               <div class="f-ctrl">
-                <div style="display:grid;grid-template-columns:1fr 120px 120px 80px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
-                  <span>参数名</span><span>类型</span><span>默认值</span><span>必填</span><span></span>
+                <div style="display:grid;grid-template-columns:1fr 120px 1fr 120px 80px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
+                  <span>参数名</span><span>类型</span><span>描述信息</span><span>默认值</span><span>必填</span><span></span>
                 </div>
-                <div id="param-list">
                 </div>
                 <button class="btn" style="margin-top:8px;font-size:13px" onclick="addParam()">+ 添加参数</button>
                 <div class="f-hint">路由绑定此插件时，用户需要填写这些参数的值</div>
@@ -696,13 +695,14 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
             <div class="f-row">
               <div class="f-label">参数定义：</div>
               <div class="f-ctrl">
-                <div style="display:grid;grid-template-columns:1fr 120px 120px 80px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
-                  <span>参数名</span><span>类型</span><span>默认值</span><span>必填</span><span></span>
+                <div style="display:grid;grid-template-columns:1fr 120px 1fr 120px 80px 36px;gap:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;margin-bottom:8px;font-size:13px;color:#8c8c8c">
+                  <span>参数名</span><span>类型</span><span>描述信息</span><span>默认值</span><span>必填</span><span></span>
                 </div>
                 <div id="param-list-edit">
                   <div class="param-row">
                     <input class="f-input" value="rate" />
                     <div class="sel-wrap"><select class="f-select"><option>string</option><option selected>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
+                    <input class="f-input" placeholder="参数说明（可选）" value="每秒最大请求数" />
                     <input class="f-input" placeholder="可选" />
                     <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" checked style="accent-color:#1890ff" /> 必填</div>
                     <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
@@ -710,7 +710,8 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                   <div class="param-row">
                     <input class="f-input" value="burst" />
                     <div class="sel-wrap"><select class="f-select"><option>string</option><option selected>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
-                    <input class="f-input" placeholder="可选" />
+                    <input class="f-input" placeholder="参数说明（可选）" value="允许的突发请求量" />
+                    <input class="f-input" placeholder="可选" value="0" />
                     <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" style="accent-color:#1890ff" /> 必填</div>
                     <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
                   </div>
@@ -812,7 +813,8 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                   <th>参数名</th>
                   <th>类型</th>
                   <th>必填</th>
-                  <th>说明</th>
+                  <th>默认值</th>
+                  <th>描述信息</th>
                 </tr>
               </thead>
               <tbody>
@@ -820,12 +822,14 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
                   <td>rate</td>
                   <td><span class="tag-blue">integer</span></td>
                   <td>是</td>
+                  <td class="text-gray">--</td>
                   <td class="text-gray">每秒最大请求数，最小值为 1</td>
                 </tr>
                 <tr>
                   <td>burst</td>
                   <td><span class="tag-blue">integer</span></td>
                   <td>否</td>
+                  <td class="text-gray">0</td>
                   <td class="text-gray">允许的突发请求量，默认 0（不允许突发）</td>
                 </tr>
               </tbody>
@@ -1455,7 +1459,8 @@ function appendParamRow(list) {
   div.innerHTML = `
     <input class="f-input" placeholder="参数名" />
     <div class="sel-wrap"><select class="f-select"><option>string</option><option>integer</option><option>number</option><option>boolean</option><option>array</option><option>object</option></select></div>
-    <input class="f-input" placeholder="可选" />
+    <input class="f-input" placeholder="参数说明（可选）" />
+    <input class="f-input" placeholder="默认值（可选）" />
     <div style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" style="accent-color:#1890ff" /> 必填</div>
     <button class="param-del" onclick="this.closest('.param-row').remove()">×</button>
   `;
