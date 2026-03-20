@@ -1481,6 +1481,11 @@ const TOTAL_STEPS = 3;
 
 function initWizard(startStep) {
   currentStep = startStep || 1;
+  if (!startStep) {
+    const bl = document.getElementById('bound-list');
+    if (bl) bl.innerHTML = '';
+    checkEmpty();
+  }
   renderWizard();
 }
 
@@ -1548,6 +1553,11 @@ function pickPlugin(el, name, stage, desc) {
 function confirmPick() {
   if (!selPlugin) { alert('请先选择插件'); return; }
   const container = document.getElementById('bound-list');
+
+  // 自动计算下一个执行顺序（最大值 + 10）
+  const existingOrders = Array.from(container.querySelectorAll('input[type=number]')).map(i => parseInt(i.value) || 0);
+  const nextOrder = existingOrders.length ? Math.max(...existingOrders) + 10 : 10;
+
   const card = document.createElement('div');
   card.className = 'bound-card';
   const params = (pluginParams[selPlugin.name] || []).map(([k, t, r, d, def]) =>
@@ -1560,14 +1570,15 @@ function confirmPick() {
         <span class="tag-blue" style="font-size:11px">${selPlugin.stage}</span>
         <span class="text-gray text-sm">${selPlugin.desc}</span>
         <span style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:12px;color:#595959">
-          执行顺序：<input type="number" class="f-input" value="10" min="1"
-            style="width:64px;height:26px;font-size:12px;padding:0 6px" />
+          执行顺序：<input type="number" class="f-input order-input" value="${nextOrder}" min="1"
+            style="width:64px;height:26px;font-size:12px;padding:0 6px" onchange="checkOrderConflict(this)" />
           <span class="text-gray" style="font-size:11px">（同阶段内生效，越大越先执行）</span>
+          <span class="order-warn" style="color:#ff4d4f;font-size:12px;display:none">执行顺序与其他插件重复</span>
         </span>
       </div>
       <div style="display:flex;gap:12px">
         <span class="op" onclick="toggleCard(this)">收起</span>
-        <span class="op danger" onclick="this.closest('.bound-card').remove();checkEmpty()">解绑</span>
+        <span class="op danger" onclick="this.closest('.bound-card').remove();checkEmpty();checkAllOrders()">解绑</span>
       </div>
     </div>
     <div class="bound-card-bd">
@@ -1584,6 +1595,21 @@ function toggleCard(btn) {
   const open = bd.style.display !== 'none';
   bd.style.display = open ? 'none' : 'block';
   btn.textContent = open ? '展开' : '收起';
+}
+
+function checkOrderConflict(input) {
+  checkAllOrders();
+}
+
+function checkAllOrders() {
+  const inputs = Array.from(document.querySelectorAll('#bound-list .order-input'));
+  const values = inputs.map(i => parseInt(i.value) || 0);
+  inputs.forEach((input, idx) => {
+    const warn = input.closest('span').querySelector('.order-warn');
+    const dup = values.some((v, i) => i !== idx && v === values[idx]);
+    if (warn) warn.style.display = dup ? 'inline' : 'none';
+    input.style.borderColor = dup ? '#ff4d4f' : '';
+  });
 }
 
 function checkEmpty() {
