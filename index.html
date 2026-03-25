@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
@@ -41,8 +41,8 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 .sider-collapse-btn:hover { color: #fff; }
 
 /* ===== 主内容 ===== */
-.main-content { flex: 1; overflow-y: auto; background: #f2f6f9; display: flex; flex-direction: column; }
-.page { display: none; flex: 1; flex-direction: column; min-height: 0; }
+.main-content { flex: 1; min-width: 0; overflow-y: auto; background: #f2f6f9; }
+.page { display: none; flex: 1; flex-direction: column; min-height: 0; width: 100%; }
 .page.active { display: flex; }
 
 /* ===== 页头 ===== */
@@ -86,6 +86,17 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 .op.danger { color: #ff4d4f; }
 .op.danger:hover { color: #ff7875; }
 .op.gray { color: #8c8c8c; cursor: default; }
+
+/* more dropdown */
+.more-wrap { position: relative; display: inline-block; }
+.more-btn { color: #1890ff; cursor: pointer; font-size: 14px; white-space: nowrap; }
+.more-btn:hover { color: #40a9ff; }
+.more-menu { display: none; position: fixed; background: #fff; border: 1px solid #d9d9d9; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.15); z-index: 9999; min-width: 88px; }
+.more-menu.open { display: block; }
+.more-menu-item { padding: 7px 16px; font-size: 13px; color: #595959; cursor: pointer; white-space: nowrap; }
+.more-menu-item:hover { background: #f5f5f5; color: #1890ff; }
+.more-menu-item.danger { color: #ff4d4f; }
+.more-menu-item.danger:hover { background: #fff2f0; color: #ff4d4f; }
 
 /* 状态 */
 .tag-on   { display: inline-block; padding: 1px 8px; font-size: 12px; border: 1px solid #52c41a; color: #52c41a; background: #f6ffed; border-radius: 2px; }
@@ -352,13 +363,12 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>2026/03/15 10:22:33</td>
               <td>基于客户端 IP 的请求频率限制，超限返回 429</td>
               <td>王铭浩</td>
-              <td><div class="ops">
-                <span class="op" onclick="showPage('page-detail')">查看</span>
-                <span class="op gray" title="当前有草稿，请编辑草稿">编辑</span>
-                <span class="op" onclick="showTransfer('ip-rate-limit')">转移</span>
-                <span class="op gray" title="已是最新发布版本">发布</span>
-                <span class="op danger" onclick="showDel('ip-rate-limit')">删除</span>
-              </div></td>
+                <td><div class="ops">
+                  <span class="op" onclick="showPage('page-detail')">查看</span>
+                  <span class="op gray" title="当前有草稿，请编辑草稿">编辑</span>
+                  <span class="op gray" title="当前有草稿，请先发布草稿">发布</span>
+                  <div class="more-wrap"><span class="more-btn" onclick="toggleMore(this)">更多 ▾</span><div class="more-menu"><div class="more-menu-item" onclick="downloadLua('ip-rate-limit')">下载 Lua 文件</div><div class="more-menu-item" onclick="showTransfer('ip-rate-limit')">转移</div><div class="more-menu-item danger" onclick="showDel('ip-rate-limit')">删除</div></div></div>
+                </div></td>
             </tr>
             <!-- ip-rate-limit 草稿子行 -->
             <tr class="draft-row" id="draft-ipl" style="display:none">
@@ -372,7 +382,6 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>王铭浩</td>
               <td><div class="ops">
                 <span class="op" onclick="showPage('page-detail')">查看</span>
-                <span class="op" onclick="showPage('page-edit')">编辑</span>
                 <span class="op" onclick="showPublishConfirm('ipl')">发布</span>
                 <span class="op danger" onclick="deleteDraft('ipl')">删除</span>
               </div></td>
@@ -391,13 +400,12 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>2026/03/10 14:05:00</td>
               <td>校验请求头中的 JWT Token，鉴权失败返回 401</td>
               <td>徐鹏志</td>
-              <td><div class="ops">
-                <span class="op" onclick="showPage('page-detail')">查看</span>
-                <span class="op" onclick="showPage('page-edit')">编辑</span>
-                <span class="op" onclick="showTransfer('jwt-auth')">转移</span>
-                <span class="op gray" title="已是最新发布版本">发布</span>
-                <span class="op danger" onclick="showDel('jwt-auth')">删除</span>
-              </div></td>
+                <td><div class="ops">
+                  <span class="op" onclick="showPage('page-detail')">查看</span>
+                  <span class="op" onclick="showPage('page-edit')">编辑</span>
+                  <span class="op gray" title="已是最新版本">发布</span>
+                  <div class="more-wrap"><span class="more-btn" onclick="toggleMore(this)">更多 ▾</span><div class="more-menu"><div class="more-menu-item" onclick="downloadLua('jwt-auth')">下载 Lua 文件</div><div class="more-menu-item" onclick="showTransfer('jwt-auth')">转移</div><div class="more-menu-item danger" onclick="showDel('jwt-auth')">删除</div></div></div>
+                </div></td>
             </tr>
 
             <!-- request-rewrite -->
@@ -413,13 +421,12 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>2026/03/08 09:30:00</td>
               <td>改写请求 URI 并在转发前统一注入业务标识请求头</td>
               <td>黄华帅</td>
-              <td><div class="ops">
-                <span class="op">查看</span>
-                <span class="op" onclick="showPage('page-edit')">编辑</span>
-                <span class="op" onclick="showTransfer('request-rewrite')">转移</span>
-                <span class="op gray" title="已是最新发布版本">发布</span>
-                <span class="op danger" onclick="showDel('request-rewrite')">删除</span>
-              </div></td>
+                <td><div class="ops">
+                  <span class="op">查看</span>
+                  <span class="op" onclick="showPage('page-edit')">编辑</span>
+                  <span class="op gray" title="已是最新版本">发布</span>
+                  <div class="more-wrap"><span class="more-btn" onclick="toggleMore(this)">更多 ▾</span><div class="more-menu"><div class="more-menu-item" onclick="downloadLua('request-rewrite')">下载 Lua 文件</div><div class="more-menu-item" onclick="showTransfer('request-rewrite')">转移</div><div class="more-menu-item danger" onclick="showDel('request-rewrite')">删除</div></div></div>
+                </div></td>
             </tr>
 
             <!-- response-cache -->
@@ -435,13 +442,12 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>2026/03/01 16:48:00</td>
               <td>对 GET 接口的响应结果进行本地缓存，降低上游压力</td>
               <td>黄华帅</td>
-              <td><div class="ops">
-                <span class="op">查看</span>
-                <span class="op" onclick="showPage('page-edit')">编辑</span>
-                <span class="op gray" title="未发布插件不可转移">转移</span>
-                <span class="op" onclick="showPublishPlugin('response-cache')">发布</span>
-                <span class="op danger" onclick="showDel('response-cache')">删除</span>
-              </div></td>
+                <td><div class="ops">
+                  <span class="op">查看</span>
+                  <span class="op" onclick="showPage('page-edit')">编辑</span>
+                  <span class="op" onclick="showPublishPlugin('response-cache')">发布</span>
+                  <div class="more-wrap"><span class="more-btn" onclick="toggleMore(this)">更多 ▾</span><div class="more-menu"><div class="more-menu-item" onclick="downloadLua('response-cache')">下载 Lua 文件</div><div class="more-menu-item danger" onclick="showDel('response-cache')">删除</div></div></div>
+                </div></td>
             </tr>
 
             <!-- ip-blacklist -->
@@ -457,13 +463,12 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>2026/02/20 11:00:00</td>
               <td>拦截黑名单 IP 发来的请求，命中后直接返回 403</td>
               <td>何伟军</td>
-              <td><div class="ops">
-                <span class="op">查看</span>
-                <span class="op" onclick="showPage('page-edit')">编辑</span>
-                <span class="op" onclick="showTransfer('ip-blacklist')">转移</span>
-                <span class="op gray" title="已是最新发布版本">发布</span>
-                <span class="op danger" onclick="showDel('ip-blacklist')">删除</span>
-              </div></td>
+                <td><div class="ops">
+                  <span class="op">查看</span>
+                  <span class="op" onclick="showPage('page-edit')">编辑</span>
+                  <span class="op gray" title="已是最新版本">发布</span>
+                  <div class="more-wrap"><span class="more-btn" onclick="toggleMore(this)">更多 ▾</span><div class="more-menu"><div class="more-menu-item" onclick="downloadLua('ip-blacklist')">下载 Lua 文件</div><div class="more-menu-item" onclick="showTransfer('ip-blacklist')">转移</div><div class="more-menu-item danger" onclick="showDel('ip-blacklist')">删除</div></div></div>
+                </div></td>
             </tr>
 
             <!-- cors-handler -->
@@ -479,13 +484,12 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>2026/02/14 09:00:00</td>
               <td>统一处理跨域预检请求，并向响应注入 CORS 头</td>
               <td>王铭浩</td>
-              <td><div class="ops">
-                <span class="op">查看</span>
-                <span class="op" onclick="showPage('page-edit')">编辑</span>
-                <span class="op" onclick="showTransfer('cors-handler')">转移</span>
-                <span class="op gray" title="已是最新发布版本">发布</span>
-                <span class="op danger" onclick="showDel('cors-handler')">删除</span>
-              </div></td>
+                <td><div class="ops">
+                  <span class="op">查看</span>
+                  <span class="op" onclick="showPage('page-edit')">编辑</span>
+                  <span class="op gray" title="已是最新版本">发布</span>
+                  <div class="more-wrap"><span class="more-btn" onclick="toggleMore(this)">更多 ▾</span><div class="more-menu"><div class="more-menu-item" onclick="downloadLua('cors-handler')">下载 Lua 文件</div><div class="more-menu-item" onclick="showTransfer('cors-handler')">转移</div><div class="more-menu-item danger" onclick="showDel('cors-handler')">删除</div></div></div>
+                </div></td>
             </tr>
 
             <!-- access-logger -->
@@ -501,13 +505,12 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
               <td>2026/02/05 15:30:00</td>
               <td>将请求明细异步投递至 Kafka，用于访问审计与监控上报</td>
               <td>何伟军</td>
-              <td><div class="ops">
-                <span class="op">查看</span>
-                <span class="op" onclick="showPage('page-edit')">编辑</span>
-                <span class="op gray" title="未发布插件不可转移">转移</span>
-                <span class="op" onclick="showPublishPlugin('access-logger')">发布</span>
-                <span class="op danger" onclick="showDel('access-logger')">删除</span>
-              </div></td>
+                <td><div class="ops">
+                  <span class="op">查看</span>
+                  <span class="op" onclick="showPage('page-edit')">编辑</span>
+                  <span class="op" onclick="showPublishPlugin('access-logger')">发布</span>
+                  <div class="more-wrap"><span class="more-btn" onclick="toggleMore(this)">更多 ▾</span><div class="more-menu"><div class="more-menu-item" onclick="downloadLua('access-logger')">下载 Lua 文件</div><div class="more-menu-item danger" onclick="showDel('access-logger')">删除</div></div></div>
+                </div></td>
             </tr>
           </tbody>
         </table>
@@ -608,7 +611,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
 
           <div class="f-footer">
             <button class="btn" onclick="showPage('page-list')">取消</button>
-            <button class="btn btn-primary" onclick="showPage('page-list')">确 定</button>
+            <button class="btn btn-primary" onclick="showSaveConfirm()">确 定</button>
           </div>
         </div>
       </div>
@@ -714,11 +717,10 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
           </div>
           <div class="f-footer">
             <button class="btn" onclick="showPage('page-list')">取消</button>
-            <button class="btn btn-primary" onclick="showPage('page-list')">保 存</button>
+            <button class="btn btn-primary" onclick="showSaveConfirm()">保 存</button>
           </div>
         </div>
       </div>
-    </div>
 
     <!-- ==================== 查看插件（详情） ==================== -->
     <div class="page" id="page-detail">
@@ -1370,7 +1372,7 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
     </div>
     <div class="modal-bd" style="padding:20px">
       <p>确定要删除插件 <strong id="del-name"></strong> 吗？</p>
-      <p style="margin-top:8px;color:#8c8c8c;font-size:13px">删除后不可恢复，已绑定该插件的路由将自动解除关联。</p>
+      <p style="margin-top:8px;color:#8c8c8c;font-size:13px">删除后不可恢复。已绑定路由的插件无法删除，请先解除路由绑定后再操作。</p>
     </div>
     <div class="modal-ft">
       <button class="btn" onclick="document.getElementById('del-modal').classList.remove('open')">取消</button>
@@ -1446,6 +1448,33 @@ body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsof
     <div class="modal-ft">
       <button class="btn" onclick="document.getElementById('publish-route-modal').classList.remove('open')">取消</button>
       <button class="btn btn-primary" onclick="document.getElementById('publish-route-modal').classList.remove('open')">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 保存确认 -->
+<div class="mask" id="save-confirm-modal">
+  <div class="modal confirm-modal" style="width:460px">
+    <div class="modal-hd">
+      <span class="modal-title">保存插件</span>
+      <button class="modal-close" onclick="document.getElementById('save-confirm-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-bd">
+      <div style="background:#f0f6ff;border:1px solid #c5d9f7;border-radius:4px;padding:12px 14px;font-size:13px;color:#595959;line-height:1.8">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#1677ff;color:#fff;font-size:11px;font-weight:bold;flex-shrink:0">i</span>
+          <span style="color:#1677ff;font-weight:500;font-size:13px">注意</span>
+        </div>
+        <ul style="margin:0;padding-left:18px">
+          <li>插件保存后所有成员均可查看，仅创建人和管理员可编辑或删除。</li>
+          <li>如有敏感信息（如密钥、Token），建议通过配置参数传入，在路由绑定插件时填写具体值。</li>
+          <li>保存后需发布插件方可生效。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="document.getElementById('save-confirm-modal').classList.remove('open')">取消</button>
+      <button class="btn btn-primary" onclick="confirmSave()">确认保存</button>
     </div>
   </div>
 </div>
@@ -1726,6 +1755,44 @@ function deleteDraft(key) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.querySelectorAll('.mask.open').forEach(m => m.classList.remove('open'));
 });
+
+// toggle more dropdown
+function toggleMore(btn) {
+  event.stopPropagation();
+  const menu = btn.nextElementSibling;
+  const isOpen = menu.classList.contains('open');
+  document.querySelectorAll('.more-menu.open').forEach(m => m.classList.remove('open'));
+  if (!isOpen) {
+    const r = btn.getBoundingClientRect();
+    menu.style.top  = (r.bottom + 4) + 'px';
+    menu.style.left = 'auto';
+    menu.style.right = (window.innerWidth - r.right) + 'px';
+    menu.classList.add('open');
+  }
+}
+document.addEventListener('click', e => {
+  if (!e.target.classList.contains('more-btn')) {
+    document.querySelectorAll('.more-menu.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// save confirm modal
+function showSaveConfirm() {
+  document.getElementById('save-confirm-modal').classList.add('open');
+}
+function confirmSave() {
+  document.getElementById('save-confirm-modal').classList.remove('open');
+  showPage('page-list');
+}
+
+// download lua
+function downloadLua(name) {
+  const blob = new Blob(['-- ' + name + '.lua'], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name + '.lua';
+  a.click();
+}
 </script>
 </body>
 </html>
