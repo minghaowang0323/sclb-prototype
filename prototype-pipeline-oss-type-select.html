@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>Flux DevOps · 流水线编辑</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsoft yahei","sans-serif"; background: #f5f7fa; font-size: 14px; color: #303133; }
+
+.top-nav { height: 52px; background: #001529; display: flex; align-items: center; padding: 0 20px; position: fixed; top: 0; left: 0; right: 0; z-index: 200; }
+.top-nav-left { display: flex; align-items: center; gap: 12px; }
+.top-logo { font-size: 20px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+.top-nav-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.2); }
+.top-nav-items { display: flex; align-items: center; gap: 0; height: 60px; }
+.top-nav-item { padding: 0 16px; height: 60px; display: flex; align-items: center; color: rgba(255,255,255,0.65); cursor: pointer; font-size: 14px; white-space: nowrap; }
+.top-nav-item:hover { color: #fff; }
+.top-nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.top-save-tip { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: #fff7e6; border: 1px solid #ffd591; color: #e6a23c; font-size: 13px; }
+.top-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; border: 1px solid #dcdfe6; background: #fff; color: #606266; font-size: 14px; cursor: pointer; border-radius: 2px; }
+.top-btn:hover { border-color: #1890ff; color: #1890ff; }
+.top-btn-primary { background: #1890ff; border-color: #1890ff; color: #fff; }
+.top-btn-primary:hover { background: #40a9ff; border-color: #40a9ff; color: #fff; }
+.top-user { display: flex; align-items: center; gap: 10px; color: #fff; font-size: 14px; }
+.top-avatar { width: 32px; height: 32px; background: #1890ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; color: #fff; }
+
+.layout { display: flex; margin-top: 52px; height: calc(100vh - 52px); }
+
+.sider { width: 200px; background: #001529; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.sider-menu { flex: 1; padding: 8px 0; }
+.menu-item { display: flex; align-items: center; gap: 10px; padding: 12px 24px; color: rgba(255,255,255,0.65); font-size: 14px; cursor: pointer; }
+.menu-item:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.menu-item.active { color: #fff; background: #1890ff; }
+.menu-group { padding: 8px 0; }
+.menu-group .menu-item { padding-left: 48px; font-size: 13px; }
+.menu-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
+.sider-collapse { height: 48px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.45); cursor: pointer; border-top: 1px solid rgba(255,255,255,0.1); font-size: 18px; }
+
+.main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+
+.page-header { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 24px; display: flex; align-items: center; height: 56px; flex-shrink: 0; }
+.page-header-left { display: flex; align-items: center; gap: 20px; }
+.back-btn { color: #1890ff; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 4px; }
+.page-name { font-size: 14px; color: #303133; }
+.page-tabs { display: flex; align-items: center; gap: 0; margin-left: 32px; }
+.page-tab { padding: 0 20px; height: 56px; display: flex; align-items: center; color: #606266; cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; }
+.page-tab:hover { color: #1890ff; }
+.page-tab.active { color: #1890ff; border-bottom-color: #1890ff; }
+.page-header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+.content-wrapper { flex: 1; display: flex; min-width: 0; overflow: hidden; }
+
+.canvas-area { flex: 1; overflow: auto; background: #f5f7fa; position: relative; }
+.canvas-inner { min-width: 1100px; min-height: 520px; padding: 40px; }
+.flow-canvas { display: flex; align-items: center; justify-content: flex-start; gap: 0; position: relative; }
+.flow-item { display: flex; align-items: center; }
+.flow-dot { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid #dcdfe6; flex-shrink: 0; }
+.flow-dot.done { border-color: #67c23a; background: #67c23a; }
+.flow-line { width: 48px; height: 2px; background: #dcdfe6; flex-shrink: 0; }
+.flow-line.done { background: #67c23a; }
+.flow-card { background: #fff; border: 1px solid #dcdfe6; border-radius: 2px; padding: 12px 20px; cursor: pointer; min-width: 160px; text-align: center; flex-shrink: 0; }
+.flow-card:hover { border-color: #1890ff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.flow-card.active { border-color: #1890ff; box-shadow: 0 2px 8px rgba(24,144,255,0.15); }
+.flow-card-title { font-size: 14px; color: #303133; }
+.flow-add { width: 72px; height: 40px; border: 1px dashed #dcdfe6; border-radius: 2px; background: #fafafa; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #909399; font-size: 20px; }
+.flow-add:hover { border-color: #1890ff; color: #1890ff; background: #e6f7ff; }
+
+.right-drawer { width: 440px; background: #fff; border-left: 1px solid #e8e8e8; flex-shrink: 0; display: flex; flex-direction: column; }
+.drawer-header { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+.drawer-header-left { display: flex; align-items: center; gap: 12px; }
+.drawer-close { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #909399; font-size: 18px; }
+.drawer-close:hover { color: #303133; }
+.drawer-title { font-size: 16px; font-weight: 500; color: #303133; }
+.drawer-actions { display: flex; gap: 20px; }
+.drawer-action { font-size: 14px; cursor: pointer; color: #606266; }
+.drawer-action.delete { color: #f56c6c; }
+.drawer-action:hover { opacity: 0.8; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.drawer-section-title { font-size: 14px; color: #303133; padding: 12px 16px; background: #ecf5ff; border: 1px solid #d9ecff; color: #1890ff; margin-bottom: 24px; }
+
+.form-item { margin-bottom: 22px; }
+.form-label { font-size: 14px; color: #303133; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+.form-label .required { color: #f56c6c; }
+.form-label .help { width: 16px; height: 16px; border: 1px solid #dcdfe6; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; color: #909399; cursor: pointer; }
+.form-label .help:hover { border-color: #1890ff; color: #1890ff; }
+.form-input { width: 100%; height: 36px; border: 1px solid #dcdfe6; padding: 6px 12px; font-size: 14px; outline: none; font-family: inherit; border-radius: 2px; box-sizing: border-box; transition: all 0.2s; color: #303133; }
+.form-input::placeholder { color: #c0c4cc; }
+.form-input:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+.form-select { width: 100%; height: 36px; border: 1px solid #dcdfe6; padding: 6px 30px 6px 12px; font-size: 14px; outline: none; background: #fff; font-family: inherit; appearance: none; border-radius: 2px; cursor: pointer; box-sizing: border-box; transition: all 0.2s; color: #303133; }
+.form-select:invalid, .form-select option[value=""] { color: #c0c4cc; }
+.form-select:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+.select-wrapper { position: relative; }
+.select-wrapper::after { content:'▾'; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#c0c4cc; pointer-events:none; font-size:12px; }
+.form-desc { margin-top: 8px; color: #909399; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="top-nav-left">
+    <div class="top-logo">Panther</div>
+    <div class="top-nav-divider"></div>
+    <div class="top-nav-items">
+      <div class="top-nav-item">控制台</div>
+      <div class="top-nav-item">全部产品</div>
+      <div class="top-nav-item">Flux DevOps</div>
+      <div class="top-nav-item">Redis</div>
+      <div class="top-nav-item">负载均衡 SCLB</div>
+      <div class="top-nav-item">CMDB</div>
+      <div class="top-nav-item">CVM</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;margin-left:auto;">
+    <div class="top-user">
+      <span>minghaowang220757@sohu-inc.com</span>
+      <div class="top-avatar">王</div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sider">
+    <div class="sider-menu">
+      <div class="menu-item"><span>📊</span>概览</div>
+      <div class="menu-item"><span>📦</span>应用</div>
+      <div class="menu-item" style="background:rgba(255,255,255,0.08);">
+        <span>⚙️</span>流水线
+      </div>
+      <div class="menu-divider"></div>
+      <div class="menu-group">
+        <div class="menu-item active">流水线列表</div>
+        <div class="menu-item">自定义插件</div>
+      </div>
+      <div class="menu-item"><span>🏗</span>环境管理</div>
+      <div class="menu-item"><span>📝</span>代码管理</div>
+      <div class="menu-item"><span>📦</span>制品仓库</div>
+      <div class="menu-item"><span>🔍</span>代码评审</div>
+      <div class="menu-item"><span>📋</span>操作审计</div>
+    </div>
+    <div class="sider-collapse">‹</div>
+  </div>
+
+  <div class="main-area">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="back-btn">← 返回</div>
+        <div class="page-name">test01-wmh</div>
+      </div>
+      <div class="page-tabs">
+        <div class="page-tab">基本信息</div>
+        <div class="page-tab active">流程详情</div>
+        <div class="page-tab">流程配置</div>
+        <div class="page-tab">触发规则</div>
+        <div class="page-tab">报警通知</div>
+      </div>
+      <div class="page-header-right">
+        <div class="top-save-tip">
+          <span>⚠</span>
+          <span>已修改配置，请保存</span>
+        </div>
+        <button class="top-btn">仅保存</button>
+        <button class="top-btn top-btn-primary">保存并运行</button>
+      </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="canvas-area">
+        <div class="canvas-inner">
+          <div class="flow-canvas">
+
+            <div class="flow-item">
+              <div class="flow-dot done"></div>
+            </div>
+            <div class="flow-line done"></div>
+
+            <div class="flow-item">
+              <div class="flow-card">
+                <div class="flow-card-title">自定义命令-构建</div>
+              </div>
+            </div>
+
+            <div class="flow-line"></div>
+            <div class="flow-dot"></div>
+            <div class="flow-line"></div>
+
+            <div class="flow-item">
+              <div class="flow-card">
+                <div class="flow-card-title">部署到测试环境1</div>
+              </div>
+            </div>
+
+            <div class="flow-line"></div>
+            <div class="flow-dot"></div>
+            <div class="flow-line"></div>
+
+            <div class="flow-item" style="position:relative;">
+              <div class="flow-card active">
+                <div class="flow-card-title">交付到对象存储</div>
+              </div>
+            </div>
+
+            <div class="flow-line"></div>
+            <div class="flow-dot"></div>
+            <div class="flow-line"></div>
+
+            <div class="flow-item">
+              <div class="flow-add">+</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="right-drawer">
+        <div class="drawer-header">
+          <div class="drawer-header-left">
+            <div class="drawer-close">×</div>
+            <div class="drawer-title">编辑任务</div>
+          </div>
+          <div class="drawer-actions">
+            <span class="drawer-action delete">删除</span>
+          </div>
+        </div>
+        <div class="drawer-body">
+
+          <div class="drawer-section-title" style="color:#303133;">交付构建制品到对象存储</div>
+
+          <div class="form-item">
+            <div class="form-label">
+              <span class="required">*</span>
+              任务名称
+            </div>
+            <input type="text" class="form-input" value="交付到对象存储" />
+          </div>
+
+          <div class="form-item">
+            <div class="form-label">
+              <span class="required">*</span>
+              对象存储类型
+              <span class="help">i</span>
+            </div>
+            <div class="select-wrapper">
+              <select class="form-select" id="ossTypeSelect" onchange="onOssTypeChange()" required>
+                <option value="self" selected>搜狐云 OSS</option>
+                <option value="aliyun">阿里云 OSS</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-item" id="resourceItem">
+            <div class="form-label">
+              <span class="required">*</span>
+              资源包
+              <span class="help">i</span>
+            </div>
+            <div class="select-wrapper">
+              <select class="form-select" id="resourceSelect" required>
+                <option value="" selected style="color:#c0c4cc;">请选择资源包</option>
+                <option value="social-business-artifacts" style="color:#303133;">social-business-artifacts</option>
+                <option value="social-web-artifacts" style="color:#303133;">social-web-artifacts</option>
+                <option value="social-mobile-artifacts" style="color:#303133;">social-mobile-artifacts</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-item">
+            <div class="form-label">
+              <span class="required">*</span>
+              存储桶
+              <span class="help">i</span>
+            </div>
+            <div class="select-wrapper">
+              <select class="form-select" id="bucketSelect" required>
+                <option value="" selected style="color:#c0c4cc;">请选择存储桶</option>
+                <option value="social-business-artifacts" style="color:#303133;">social-business-artifacts</option>
+                <option value="social-web-artifacts" style="color:#303133;">social-web-artifacts</option>
+                <option value="social-mobile-artifacts" style="color:#303133;">social-mobile-artifacts</option>
+              </select>
+            </div>
+            <div class="form-desc" id="bucketDesc" style="display:none;"></div>
+          </div>
+
+          <div class="form-item">
+            <div class="form-label">
+              <span class="required">*</span>
+              交付文件
+              <span class="help">i</span>
+            </div>
+            <input type="text" class="form-input" placeholder="请输入交付文件相对路径" />
+          </div>
+
+          <div class="form-item">
+            <div class="form-label">
+              <span class="required">*</span>
+              文件路径
+              <span class="help">i</span>
+            </div>
+            <input type="text" class="form-input" placeholder="请输入相对路径，格式：test/" />
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function onOssTypeChange() {
+  const type = document.getElementById('ossTypeSelect').value;
+  const resourceItem = document.getElementById('resourceItem');
+  const bucketSelect = document.getElementById('bucketSelect');
+  const bucketDesc = document.getElementById('bucketDesc');
+
+  if (type === 'aliyun') {
+    resourceItem.style.display = 'none';
+    bucketDesc.style.display = 'block';
+    bucketSelect.innerHTML = `
+      <option value="" selected style="color:#c0c4cc;">请选择存储桶</option>
+      <option value="social-prod-oss" style="color:#303133;">social-prod-oss</option>
+      <option value="social-staging-oss" style="color:#303133;">social-staging-oss</option>
+      <option value="social-backup-oss" style="color:#303133;">social-backup-oss</option>
+    `;
+  } else {
+    resourceItem.style.display = 'block';
+    bucketDesc.style.display = 'none';
+    bucketSelect.innerHTML = `
+      <option value="" selected style="color:#c0c4cc;">请选择存储桶</option>
+      <option value="social-business-artifacts" style="color:#303133;">social-business-artifacts</option>
+      <option value="social-web-artifacts" style="color:#303133;">social-web-artifacts</option>
+      <option value="social-mobile-artifacts" style="color:#303133;">social-mobile-artifacts</option>
+    `;
+  }
+}
+</script>
+
+</body>
+</html>
