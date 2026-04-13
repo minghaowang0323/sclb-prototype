@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>Panther · 报警配置</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "PingFangSC","helvetica neue","microsoft yahei ui","microsoft yahei","sans-serif"; background: #f2f6f9; font-size: 14px; color: #000000d9; }
+
+.top-nav { height: 48px; background: #001529; display: flex; align-items: center; padding: 0 16px; position: fixed; top: 0; left: 0; right: 0; z-index: 200; }
+.top-logo { display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid rgba(255,255,255,0.12); margin-right: 4px; flex-shrink: 0; }
+.top-logo-text { font-size: 16px; font-weight: 600; color: #fff; }
+.top-nav-items { display: flex; align-items: center; flex: 1; overflow: hidden; }
+.top-nav-item { padding: 0 12px; height: 48px; display: flex; align-items: center; color: rgba(255,255,255,0.75); cursor: pointer; font-size: 13px; white-space: nowrap; border-bottom: 2px solid transparent; }
+.top-nav-item:hover { color: #fff; }
+.top-nav-item.active { color: #fff; border-bottom-color: #1890ff; background: rgba(255,255,255,0.06); }
+.top-nav-avatar { width: 28px; height: 28px; background: #1890ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #fff; margin-left: 6px; cursor: pointer; }
+
+.layout { display: flex; margin-top: 48px; height: calc(100vh - 48px); }
+
+.sider { width: 168px; background: #001529; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.sider-title { display: block; line-height: 48px; padding: 0 16px; font-size: 14px; font-weight: 500; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.12); flex-shrink: 0; }
+.sider-menu { flex: 1; padding: 4px 0; }
+.menu-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; color: rgba(255,255,255,0.65); font-size: 13px; cursor: pointer; transition: background 0.15s; }
+.menu-item:hover { color: #fff; background: rgba(255,255,255,0.06); }
+.menu-item.active { color: #fff; background: #1890ff; }
+.menu-group-title { padding: 12px 16px 8px; color: rgba(255,255,255,0.45); font-size: 12px; }
+
+.main-content { flex: 1; min-width: 0; overflow-y: auto; background: #f2f6f9; }
+
+.breadcrumb { padding: 12px 16px 0; color: #000000d9; font-size: 14px; }
+.breadcrumb a { color: #1890ff; text-decoration: none; cursor: pointer; }
+.breadcrumb a:hover { color: #40a9ff; }
+
+.content-card { margin: 16px; background: #fff; border: 1px solid #f0f0f0; }
+
+.form-section { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; }
+.form-section:last-child { border-bottom: none; }
+.section-title { font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+
+.form-item { display: flex; align-items: flex-start; margin-bottom: 20px; }
+.form-item:last-child { margin-bottom: 0; }
+.form-label { width: 120px; flex-shrink: 0; text-align: right; padding-right: 12px; line-height: 32px; color: #000000d9; white-space: nowrap; }
+.form-control { flex: 1; }
+.form-hint { margin-top: 4px; color: #8c8c8c; font-size: 12px; }
+
+.checkbox-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; border: 1px solid #f0f0f0; background: #fff; }
+.checkbox-item:hover { background: #fafafa; }
+.checkbox-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #1890ff; }
+
+.wechat-box { margin-top: 12px; border: 1px solid #f0f0f0; border-top: none; padding: 24px; background: #fff; }
+.qrcode-wrapper { display: flex; flex-direction: column; gap: 16px; }
+.qrcode-img { width: 220px; height: 220px; border: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: center; background: #fff; }
+.qrcode-img svg { width: 200px; height: 200px; }
+.wechat-tips { }
+.tips-title { font-size: 14px; font-weight: 500; margin-bottom: 12px; color: #000000d9; }
+.tips-list { font-size: 14px; color: #000000d9; line-height: 2; padding-left: 24px; }
+.tips-list li { margin-bottom: 4px; }
+.tips-list a { color: #1890ff; text-decoration: none; }
+.tips-list a:hover { color: #40a9ff; }
+
+.form-footer { padding: 16px 24px; background: #fafafa; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 8px; }
+
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 15px; border: 1px solid #d9d9d9; background: #fff; color: #000000d9; font-size: 14px; cursor: pointer; border-radius: 0; line-height: 22px; font-family: inherit; transition: all 0.2s; white-space: nowrap; }
+.btn:hover { border-color: #1890ff; color: #1890ff; }
+.btn-primary { background: #1890ff; border-color: #1890ff; color: #fff; }
+.btn-primary:hover { background: #40a9ff; border-color: #40a9ff; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="top-logo">
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="16" fill="#1890ff"/>
+      <path d="M9 22 L16 11 L23 22" stroke="#fff" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+    </svg>
+    <span class="top-logo-text">Panther</span>
+  </div>
+  <div class="top-nav-items">
+    <div class="top-nav-item">控制台</div>
+    <div class="top-nav-item">全部产品</div>
+    <div class="top-nav-item">Flux DevOps</div>
+    <div class="top-nav-item">Redis</div>
+    <div class="top-nav-item">负载均衡</div>
+    <div class="top-nav-item" style="color: rgba(255,255,255,0.45);">支持输入关键词搜索产品和文档</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;margin-left:auto;">
+    <div style="color:rgba(255,255,255,0.75);font-size:13px;">业务账号</div>
+    <div style="color:rgba(255,255,255,0.75);font-size:13px;">业务账单</div>
+    <div style="color:rgba(255,255,255,0.75);font-size:13px;">工单</div>
+    <div style="color:rgba(255,255,255,0.75);font-size:13px;">值班</div>
+    <div style="color:rgba(255,255,255,0.75);font-size:13px;">学习中心</div>
+    <div style="color:rgba(255,255,255,0.75);font-size:13px;">通知</div>
+    <div class="top-nav-avatar">王</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sider">
+    <span class="sider-title">DomeOS 服务</span>
+    <div class="sider-menu">
+      <div class="menu-item"><span>🏠</span>系统概览</div>
+      <div class="menu-item"><span>🧩</span>开发集成</div>
+      <div class="menu-item"><span>📊</span>运维管理</div>
+      <div class="menu-item"><span>📈</span>函数计算</div>
+      <div class="menu-group-title">监控报警</div>
+      <div class="menu-item"><span>🔔</span>监控</div>
+      <div class="menu-item active"><span>⚠️</span>报警</div>
+      <div class="menu-item"><span>👤</span>我的DomeOS</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="breadcrumb">
+      <a>DomeOS</a>
+      <span> / </span>
+      <a>监控报警</a>
+      <span> / </span>
+      <span>创建报警模板</span>
+    </div>
+
+    <div class="content-card" style="margin-top: 12px;">
+      <div class="form-section">
+        <div class="form-item">
+          <div class="form-label">报警事件：</div>
+          <div class="form-control">
+            <label class="checkbox-item" style="display: inline-flex;">
+              <input type="checkbox" />
+              <span>弹性扩容</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-item">
+          <div class="form-label">通知方式：</div>
+          <div class="form-control" style="max-width: 800px;">
+            <label class="checkbox-item">
+              <input type="checkbox" />
+              <span>邮件报警</span>
+            </label>
+            <label class="checkbox-item" style="margin-top: -1px;">
+              <input type="checkbox" checked />
+              <span>微信报警</span>
+            </label>
+
+            <div class="wechat-box">
+              <div class="qrcode-wrapper">
+                <div class="qrcode-img">
+                  <img src="qrcode-wechat.png" alt="企业微信二维码" style="width: 200px; height: 200px;" />
+                </div>
+                <div class="wechat-tips">
+                  <div class="tips-title">温馨提示：</div>
+                  <ol class="tips-list">
+                    <li>请先扫码，点击"加入企业"；</li>
+                    <li>输入您的姓名、手机号或邮箱；</li>
+                    <li>确认您的身份信息；</li>
+                    <li>下载企业微信，验证上述邮箱后即可登录；</li>
+                    <li>如有问题请联系 <a href="mailto:tianmeiyang@sohu-inc.com">tianmeiyang@sohu-inc.com</a></li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <label class="checkbox-item" style="margin-top: -1px;">
+              <input type="checkbox" />
+              <span>HTTP 钩子</span>
+            </label>
+            <label class="checkbox-item" style="margin-top: -1px;">
+              <input type="checkbox" />
+              <span>OnCall</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn">取消</button>
+        <button class="btn btn-primary">创建报警模板</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
